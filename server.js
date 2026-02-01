@@ -1,3 +1,13 @@
+// Catch startup errors
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err);
+  process.exit(1);
+});
+
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -60,10 +70,13 @@ app.get('/{*splat}', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`CRM running at http://localhost:${PORT}`);
+// Start server (bind to 0.0.0.0 for Railway/Docker compatibility)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`CRM running on port ${PORT}`);
   if (process.env.NODE_ENV !== 'production') {
     console.log('Warning: Using default session secret. Set SESSION_SECRET in production.');
   }
+}).on('error', (err) => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
 });
