@@ -34,11 +34,21 @@ if (!fs.existsSync(sessionDir)) {
 }
 
 // Session configuration
-const sessionConfig = {
-  store: new SQLiteStore({
+console.log('Creating SQLite session store in:', sessionDir);
+let sessionStore;
+try {
+  sessionStore = new SQLiteStore({
     db: 'sessions.db',
     dir: sessionDir
-  }),
+  });
+  console.log('SQLite session store created successfully');
+} catch (err) {
+  console.error('Failed to create SQLite session store:', err);
+  process.exit(1);
+}
+
+const sessionConfig = {
+  store: sessionStore,
   secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
   resave: false,
   saveUninitialized: false,
@@ -80,11 +90,16 @@ app.get('/{*splat}', (req, res) => {
 });
 
 // Start server (bind to 0.0.0.0 for Railway/Docker compatibility)
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`CRM running on port ${PORT}`);
+  console.log(`Server address: ${JSON.stringify(server.address())}`);
   if (process.env.NODE_ENV !== 'production') {
     console.log('Warning: Using default session secret. Set SESSION_SECRET in production.');
   }
+  // Keep-alive log every 30 seconds
+  setInterval(() => {
+    console.log(`Server still running on port ${PORT}...`);
+  }, 30000);
 }).on('error', (err) => {
   console.error('Failed to start server:', err);
   process.exit(1);
