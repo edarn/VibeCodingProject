@@ -1,10 +1,14 @@
 {
   "name": "vibecodingproject",
   "version": "1.0.0",
-  "description": "Lightweight personal CRM system",
+  "description": "Lightweight multi-user CRM system",
   "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "start": "node server.js",
+    "migrate": "node scripts/migrate-json-to-sqlite.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -20,6 +24,13 @@
   },
   "homepage": "https://github.com/edarn/VibeCodingProject#readme",
   "dependencies": {
-    "express": "^5.2.1"
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.3.0",
+    "connect-sqlite3": "^0.9.15",
+    "express": "^5.0.1",
+    "express-session": "^1.18.1"
+  },
+  "overrides": {
+    "tar": "7.5.7"
   }
 }

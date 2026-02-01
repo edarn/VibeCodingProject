@@ -1,45 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const { readData, getAllContacts, getLastNoteDate } = require('../data');
+const data = require('../data');
 
 // GET /api/search?q=term - Search across contacts and companies
 router.get('/', (req, res) => {
-  const query = (req.query.q || '').toLowerCase().trim();
+  try {
+    const query = (req.query.q || '').toLowerCase().trim();
 
-  if (!query) {
-    return res.json({ contacts: [], companies: [] });
+    if (!query) {
+      return res.json({ contacts: [], companies: [] });
+    }
+
+    const results = data.search(query);
+    res.json(results);
+  } catch (err) {
+    console.error('Error searching:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
-
-  const data = readData();
-
-  // Search contacts
-  const contacts = getAllContacts(data).filter(contact => {
-    return (
-      (contact.name || '').toLowerCase().includes(query) ||
-      (contact.companyName || '').toLowerCase().includes(query) ||
-      (contact.role || '').toLowerCase().includes(query) ||
-      (contact.department || '').toLowerCase().includes(query) ||
-      (contact.description || '').toLowerCase().includes(query) ||
-      (contact.email || '').toLowerCase().includes(query)
-    );
-  });
-
-  // Search companies
-  const companies = data.companies
-    .filter(company => {
-      return (
-        (company.name || '').toLowerCase().includes(query) ||
-        (company.technologies || '').toLowerCase().includes(query)
-      );
-    })
-    .map(c => ({
-      id: c.id,
-      name: c.name,
-      technologies: c.technologies,
-      contactCount: c.contacts.length
-    }));
-
-  res.json({ contacts, companies });
 });
 
 module.exports = router;

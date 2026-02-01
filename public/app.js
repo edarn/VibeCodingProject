@@ -1,7 +1,197 @@
-// API helper functions
+// Authentication module
+const auth = {
+  currentUser: null,
+
+  async checkAuth() {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        this.currentUser = await res.json();
+        this.showLoggedInUI();
+        return true;
+      }
+    } catch (err) {
+      console.error('Auth check failed:', err);
+    }
+    this.currentUser = null;
+    this.showLoginModal();
+    return false;
+  },
+
+  showLoggedInUI() {
+    document.getElementById('nav-links').classList.remove('hidden');
+    document.getElementById('user-section').classList.remove('hidden');
+    document.getElementById('current-user').textContent = this.currentUser.username;
+    document.getElementById('auth-modal').classList.add('hidden');
+  },
+
+  showLoginModal() {
+    document.getElementById('nav-links').classList.add('hidden');
+    document.getElementById('user-section').classList.add('hidden');
+    document.getElementById('app').innerHTML = '';
+
+    const authModal = document.getElementById('auth-modal');
+    authModal.classList.remove('hidden');
+
+    document.getElementById('auth-modal-content').innerHTML = `
+      <div id="login-form">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Login</h2>
+
+        <div id="auth-error" class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded"></div>
+
+        <form onsubmit="auth.login(event)">
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <input type="text" id="login-username" required autocomplete="username"
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input type="password" id="login-password" required autocomplete="current-password"
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+
+          <button type="submit"
+                  class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition font-medium">
+            Login
+          </button>
+        </form>
+
+        <p class="mt-4 text-center text-sm text-gray-600">
+          Don't have an account?
+          <a href="#" onclick="auth.showRegisterForm(); return false;" class="text-blue-600 hover:text-blue-800">Register</a>
+        </p>
+      </div>
+    `;
+  },
+
+  showRegisterForm() {
+    document.getElementById('auth-modal-content').innerHTML = `
+      <div id="register-form">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Register</h2>
+
+        <div id="auth-error" class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded"></div>
+
+        <form onsubmit="auth.register(event)">
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <input type="text" id="register-username" required autocomplete="username"
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="email" id="register-email" required autocomplete="email"
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Password (min 6 characters)</label>
+            <input type="password" id="register-password" required minlength="6" autocomplete="new-password"
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+
+          <button type="submit"
+                  class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition font-medium">
+            Register
+          </button>
+        </form>
+
+        <p class="mt-4 text-center text-sm text-gray-600">
+          Already have an account?
+          <a href="#" onclick="auth.showLoginModal(); return false;" class="text-blue-600 hover:text-blue-800">Login</a>
+        </p>
+      </div>
+    `;
+  },
+
+  showAuthError(message) {
+    const errorEl = document.getElementById('auth-error');
+    if (errorEl) {
+      errorEl.textContent = message;
+      errorEl.classList.remove('hidden');
+    }
+  },
+
+  async login(event) {
+    event.preventDefault();
+
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        this.showAuthError(data.error || 'Login failed');
+        return;
+      }
+
+      this.currentUser = data;
+      this.showLoggedInUI();
+      router.navigate('contacts');
+    } catch (err) {
+      console.error('Login error:', err);
+      this.showAuthError('Connection error. Please try again.');
+    }
+  },
+
+  async register(event) {
+    event.preventDefault();
+
+    const username = document.getElementById('register-username').value;
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        this.showAuthError(data.error || 'Registration failed');
+        return;
+      }
+
+      this.currentUser = data;
+      this.showLoggedInUI();
+      router.navigate('contacts');
+    } catch (err) {
+      console.error('Register error:', err);
+      this.showAuthError('Connection error. Please try again.');
+    }
+  },
+
+  async logout() {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+    this.currentUser = null;
+    this.showLoginModal();
+  }
+};
+
+// API helper functions with 401 handling
 const api = {
   async get(url) {
     const res = await fetch(url);
+    if (res.status === 401) {
+      auth.showLoginModal();
+      throw new Error('Authentication required');
+    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   },
@@ -11,6 +201,10 @@ const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
+    if (res.status === 401) {
+      auth.showLoginModal();
+      throw new Error('Authentication required');
+    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   },
@@ -20,11 +214,19 @@ const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
+    if (res.status === 401) {
+      auth.showLoginModal();
+      throw new Error('Authentication required');
+    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   },
   async delete(url) {
     const res = await fetch(url, { method: 'DELETE' });
+    if (res.status === 401) {
+      auth.showLoginModal();
+      throw new Error('Authentication required');
+    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return true;
   }
@@ -92,7 +294,9 @@ const router = {
           await views.contactList(app);
       }
     } catch (err) {
-      app.innerHTML = `<div class="text-red-600">Error: ${err.message}</div>`;
+      if (err.message !== 'Authentication required') {
+        app.innerHTML = `<div class="text-red-600">Error: ${err.message}</div>`;
+      }
     }
   }
 };
@@ -1314,7 +1518,10 @@ const views = {
   }
 };
 
-// Initialize app
-document.addEventListener('DOMContentLoaded', () => {
-  router.navigate('contacts');
+// Initialize app - check auth first
+document.addEventListener('DOMContentLoaded', async () => {
+  const isAuthenticated = await auth.checkAuth();
+  if (isAuthenticated) {
+    router.navigate('contacts');
+  }
 });

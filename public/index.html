@@ -16,7 +16,7 @@
       <div class="flex justify-between h-16">
         <div class="flex items-center">
           <h1 class="text-xl font-semibold text-gray-800">Personal CRM</h1>
-          <div class="ml-10 flex space-x-4">
+          <div id="nav-links" class="ml-10 flex space-x-4 hidden">
             <a href="#" onclick="router.navigate('contacts'); return false;"
                class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                data-route="contacts">
@@ -33,6 +33,12 @@
               ToDos
             </a>
           </div>
+        </div>
+        <div id="user-section" class="flex items-center hidden">
+          <span id="current-user" class="text-sm text-gray-600 mr-4"></span>
+          <button onclick="auth.logout()" class="text-sm text-gray-500 hover:text-gray-700">
+            Logout
+          </button>
         </div>
       </div>
     </div>
@@ -52,6 +58,13 @@
   <div id="modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
       <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- Auth Modal (Login/Register) -->
+  <div id="auth-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
+      <div id="auth-modal-content"></div>
     </div>
   </div>
 

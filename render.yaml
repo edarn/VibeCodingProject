@@ -1,0 +1,19 @@
+# Render Blueprint - https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: personal-crm
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm run migrate && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATABASE_PATH
+        value: /data/crm.db
+    disk:
+      name: crm-data
+      mountPath: /data
+      sizeGB: 1
+    healthCheckPath: /
