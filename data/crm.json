@@ -1,13 +1,13 @@
 {
   "version": "1.0",
-  "lastModified": "2026-02-01T15:57:53.379Z",
+  "lastModified": "2026-02-01T17:25:09.290Z",
   "companies": [
     {
       "id": "414e25e6-0e91-48ba-bcff-f6b87b6d9474",
       "name": "Axis",
       "technologies": "",
       "createdAt": "2026-02-01T15:51:03.545Z",
-      "updatedAt": "2026-02-01T15:53:20.989Z",
+      "updatedAt": "2026-02-01T16:31:25.578Z",
       "contacts": [
         {
           "id": "8140dfc9-95f7-444b-9f8e-d37e740162cb",
@@ -43,7 +43,7 @@
           "email": "astt@sdfs.se",
           "phone": "+565 33466",
           "createdAt": "2026-02-01T15:53:11.675Z",
-          "updatedAt": "2026-02-01T15:53:20.989Z",
+          "updatedAt": "2026-02-01T16:31:25.578Z",
           "notes": [
             {
               "id": "97a17cd0-80be-4b72-bfa1-84d4e1bb9a3b",
@@ -56,6 +56,12 @@
               "content": "kuuling",
               "createdAt": "2026-02-01T15:53:20.989Z",
               "updatedAt": "2026-02-01T15:53:20.989Z"
+            },
+            {
+              "id": "efad29c0-0540-4c20-9ea9-c5f1428b8df4",
+              "content": "skura fix",
+              "createdAt": "2026-02-01T16:31:25.578Z",
+              "updatedAt": "2026-02-01T16:31:25.578Z"
             }
           ]
         }
@@ -88,6 +94,42 @@
           ]
         }
       ]
+    }
+  ],
+  "todos": [
+    {
+      "id": "4b5e49a6-c1f2-456f-a461-1bd6a0e1bc88",
+      "title": "Fixa biffen",
+      "completed": false,
+      "linkedType": "contact",
+      "linkedId": "62672920-c8a1-4ee6-a1dc-7d572254bc37",
+      "createdAt": "2026-02-01T16:22:33.183Z",
+      "updatedAt": "2026-02-01T16:22:41.426Z",
+      "completedAt": null
+    },
+    {
+      "id": "8319dda2-4369-4399-adf1-08584a618edf",
+      "title": "Skura golvet",
+      "completed": false,
+      "linkedType": "company",
+      "linkedId": "414e25e6-0e91-48ba-bcff-f6b87b6d9474",
+      "createdAt": "2026-02-01T16:22:53.643Z",
+      "updatedAt": "2026-02-01T16:30:56.781Z",
+      "completedAt": null,
+      "description": "fdsagfghhsgf",
+      "dueDate": "2026-02-02T16:30:00.000Z"
+    },
+    {
+      "id": "716aebc7-33ec-4485-8a2c-145af000ddf5",
+      "title": "test",
+      "description": "",
+      "dueDate": "2026-02-01T15:31:00.000Z",
+      "completed": false,
+      "linkedType": "contact",
+      "linkedId": "62672920-c8a1-4ee6-a1dc-7d572254bc37",
+      "createdAt": "2026-02-01T16:31:57.873Z",
+      "updatedAt": "2026-02-01T17:25:09.290Z",
+      "completedAt": null
     }
   ]
 }

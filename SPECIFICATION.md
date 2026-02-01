@@ -30,7 +30,20 @@ A lightweight, locally-run CRM system for managing companies, contacts (persons 
    - Edit existing notes
    - Delete notes
 
-4. **Data Portability**
+4. **ToDo Management**
+   - ToDos view accessible from main navigation (Contacts | Companies | ToDos)
+   - Add ToDos linked to a Company or a Contact
+   - ToDos can be added from:
+     - The ToDos list view
+     - Contact detail view
+     - Company detail view
+   - ToDo fields: title, description, completed status, linked entity (contact or company)
+   - ToDos displayed in Contact/Company detail views alongside notes
+   - Checkbox to mark ToDo as completed
+   - Completed ToDos shown greyed out
+   - View all ToDos in a central list
+
+5. **Data Portability**
    - All data stored in a single JSON file
    - Easy to backup, copy, or transfer to another machine
    - Human-readable format
@@ -69,6 +82,8 @@ A lightweight, locally-run CRM system for managing companies, contacts (persons 
     {
       "id": "company-uuid",
       "name": "Acme Corp",
+      "organizationNumber": "556123-4567",
+      "address": "Storgatan 1, 111 22 Stockholm",
       "technologies": "Java, Spring Boot, PostgreSQL, AWS",
       "createdAt": "2024-01-10T08:00:00Z",
       "updatedAt": "2024-01-15T10:30:00Z",
@@ -94,6 +109,18 @@ A lightweight, locally-run CRM system for managing companies, contacts (persons 
         }
       ]
     }
+  ],
+  "todos": [
+    {
+      "id": "todo-uuid",
+      "title": "Schedule follow-up call with John",
+      "completed": false,
+      "linkedType": "contact",
+      "linkedId": "contact-uuid",
+      "createdAt": "2024-01-10T08:00:00Z",
+      "updatedAt": "2024-01-10T08:00:00Z",
+      "completedAt": null
+    }
   ]
 }
 ```
@@ -104,6 +131,8 @@ A lightweight, locally-run CRM system for managing companies, contacts (persons 
 |-------|------|----------|-------------|
 | id | string (UUID) | Yes | Unique identifier |
 | name | string | Yes | Company name |
+| organizationNumber | string | No | Organization number (Organisationsnr) |
+| address | string | No | Company address |
 | technologies | string | No | Technical stacks used by the company |
 | createdAt | ISO datetime | Yes | When company was created |
 | updatedAt | ISO datetime | Yes | Last modification time |
@@ -132,6 +161,21 @@ A lightweight, locally-run CRM system for managing companies, contacts (persons 
 | content | string | Yes | Note text content |
 | createdAt | ISO datetime | Yes | When note was created |
 | updatedAt | ISO datetime | Yes | Last modification time |
+
+### ToDo Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| id | string (UUID) | Yes | Unique identifier |
+| title | string | Yes | ToDo title/task description |
+| description | string | No | Longer description of what needs to be done |
+| dueDate | ISO datetime | Yes | When the ToDo should be completed (defaults to current time) |
+| completed | boolean | Yes | Whether the ToDo is completed |
+| linkedType | string | Yes | Type of linked entity: "contact" or "company" |
+| linkedId | string | Yes | ID of the linked contact or company |
+| createdAt | ISO datetime | Yes | When ToDo was created |
+| updatedAt | ISO datetime | Yes | Last modification time |
+| completedAt | ISO datetime | No | When ToDo was marked complete |
 
 ---
 
@@ -185,8 +229,22 @@ A lightweight, locally-run CRM system for managing companies, contacts (persons 
    - Save/Cancel buttons
 
 6. **Add/Edit Company**
-   - Form: name, technologies
+   - Form: name, organizationNumber, address, technologies
    - Save/Cancel buttons
+
+7. **ToDos List**
+   - Third navigation option (Contacts | Companies | ToDos)
+   - List of all ToDos across contacts and companies
+   - Shows: checkbox, title, linked entity name
+   - Filter: All / Active / Completed
+   - "Add ToDo" button
+   - Click ToDo to navigate to linked contact/company
+
+8. **ToDo in Contact/Company Detail**
+   - ToDos shown in same list as notes
+   - Displayed with checkbox for completion
+   - Completed ToDos shown greyed out
+   - "Add ToDo" button/form
 
 ### UI Principles
 
@@ -253,12 +311,23 @@ VibeCodingProject/
 |--------|----------|-------------|
 | GET | /api/search?q=term | Search companies and contacts |
 
+### ToDos
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/todos | List all ToDos |
+| GET | /api/todos?filter=active\|completed | Filter ToDos by status |
+| GET | /api/todos/:id | Get single ToDo |
+| POST | /api/todos | Create new ToDo (linkedType, linkedId in body) |
+| PUT | /api/todos/:id | Update ToDo (title, completed) |
+| DELETE | /api/todos/:id | Delete ToDo |
+
 ---
 
 ## Future Enhancements (Out of Scope for V1)
 
 - [ ] Tags/categories for companies and contacts
-- [ ] Reminder/follow-up dates
+- [ ] Due dates for ToDos
 - [ ] Import/export to CSV
 - [ ] Multiple data files (workspaces)
 - [ ] Dark mode toggle
@@ -274,7 +343,9 @@ VibeCodingProject/
 - **Theme:** Light modern design
 - **Port:** 3000
 - **Main View:** Contact list (all contacts, sortable, searchable)
+- **Navigation:** Contacts | Companies | ToDos
 - **Contact Fields:** name, role, department, description, email, phone
-- **Company Fields:** name, technologies
+- **Company Fields:** name, organizationNumber, address, technologies
 - **List Columns:** Contact name, Company name, Last note date
 - **Sort Options:** By name, company, or last note date
+- **ToDos:** Linked to contacts or companies, shown alongside notes with completion checkbox

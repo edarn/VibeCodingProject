@@ -43,8 +43,12 @@ const router = {
   updateNav() {
     document.querySelectorAll('.nav-link').forEach(link => {
       const route = link.dataset.route;
-      if (route === this.currentRoute?.route ||
-          (route === 'contacts' && this.currentRoute?.route?.startsWith('contact'))) {
+      const current = this.currentRoute?.route;
+      const isActive = route === current ||
+          (route === 'contacts' && current?.startsWith('contact')) ||
+          (route === 'companies' && current?.startsWith('company')) ||
+          (route === 'todos' && current?.startsWith('todo'));
+      if (isActive) {
         link.classList.add('bg-gray-100', 'text-gray-900');
         link.classList.remove('text-gray-600');
       } else {
@@ -77,6 +81,12 @@ const router = {
           break;
         case 'company-form':
           await views.companyForm(app, params.id);
+          break;
+        case 'todos':
+          await views.todoList(app);
+          break;
+        case 'todo-form':
+          await views.todoForm(app, params.linkedType, params.linkedId);
           break;
         default:
           await views.contactList(app);
@@ -240,7 +250,11 @@ const views = {
 
   // Contact Detail View
   async contactDetail(container, id) {
-    const contact = await api.get(`/api/contacts/${id}`);
+    const [contact, allTodos] = await Promise.all([
+      api.get(`/api/contacts/${id}`),
+      api.get('/api/todos')
+    ]);
+    const todos = allTodos.filter(t => t.linkedType === 'contact' && t.linkedId === id);
 
     container.innerHTML = `
       <div class="mb-6">
@@ -284,23 +298,38 @@ const views = {
       </div>
 
       <div class="bg-white shadow-sm rounded-lg p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Notes</h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Notes & ToDos</h3>
 
         <form onsubmit="views.addNote(event, '${contact.id}')" class="mb-6">
           <textarea id="new-note" rows="3" placeholder="Add a note..."
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
-          <button type="submit" class="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-            Add Note
-          </button>
+          <div class="mt-2 flex items-center gap-4">
+            <label class="flex items-center gap-2 text-sm text-gray-600">
+              <input type="checkbox" id="make-todo" class="h-4 w-4 text-blue-600 rounded border-gray-300">
+              Make this a ToDo
+            </label>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+              Add
+            </button>
+          </div>
         </form>
 
-        <div id="notes-list" class="space-y-4">
-          ${this.renderNotes(contact.notes, contact.id)}
+        <div class="mb-3 flex gap-2 text-sm">
+          <span class="text-gray-500">Sort by:</span>
+          <button onclick="views.sortActivity('date')" class="activity-sort text-blue-600 font-medium" data-sort="date">Date <span id="sort-activity-date">↓</span></button>
+          <button onclick="views.sortActivity('type')" class="activity-sort text-gray-600 hover:text-gray-800" data-sort="type">Type <span id="sort-activity-type"></span></button>
+        </div>
+
+        <div id="activity-list" class="space-y-4">
+          ${this.renderActivityList(contact.notes, todos, contact.id, 'contact')}
         </div>
       </div>
     `;
 
     this._currentContact = contact;
+    this._currentTodos = todos;
+    this._activitySort = 'date';
+    this._activitySortAsc = false;
   },
 
   renderNotes(notes, contactId) {
@@ -325,12 +354,146 @@ const views = {
     `).join('');
   },
 
+  // Combined activity list (notes + todos)
+  renderActivityList(notes, todos, entityId, entityType) {
+    // Combine notes and todos into unified items
+    const items = [];
+
+    (notes || []).forEach(note => {
+      items.push({
+        type: 'note',
+        id: note.id,
+        content: note.content,
+        createdAt: note.createdAt,
+        completed: false
+      });
+    });
+
+    (todos || []).forEach(todo => {
+      items.push({
+        type: 'todo',
+        id: todo.id,
+        content: todo.title,
+        description: todo.description,
+        dueDate: todo.dueDate,
+        createdAt: todo.createdAt,
+        completed: todo.completed
+      });
+    });
+
+    if (items.length === 0) {
+      return '<p class="text-gray-500">No notes or ToDos yet</p>';
+    }
+
+    // Sort based on current sort setting
+    const sortField = this._activitySort || 'date';
+    const sortAsc = this._activitySortAsc !== undefined ? this._activitySortAsc : false;
+
+    items.sort((a, b) => {
+      let result;
+      if (sortField === 'type') {
+        result = a.type.localeCompare(b.type);
+      } else {
+        result = new Date(b.createdAt) - new Date(a.createdAt);
+      }
+      return sortAsc ? -result : result;
+    });
+
+    return items.map(item => {
+      if (item.type === 'note') {
+        return `
+          <div class="border-l-4 border-blue-200 pl-4 py-2" data-note-id="${item.id}">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <span class="inline-block px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700 mb-1">Note</span>
+                <p class="text-gray-700 whitespace-pre-wrap">${this.escapeHtml(item.content)}</p>
+              </div>
+              <div class="flex gap-2 ml-4">
+                <button onclick="views.editNote('${entityId}', '${item.id}')" class="text-gray-400 hover:text-gray-600 text-sm">Edit</button>
+                <button onclick="views.deleteNote('${entityId}', '${item.id}')" class="text-red-400 hover:text-red-600 text-sm">Delete</button>
+              </div>
+            </div>
+            <p class="text-xs text-gray-400 mt-1">${formatDateTime(item.createdAt)}</p>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="border-l-4 ${item.completed ? 'border-gray-300' : 'border-green-300'} pl-4 py-2 ${item.completed ? 'opacity-50' : ''}" data-todo-id="${item.id}">
+            <div class="flex justify-between items-start">
+              <div class="flex items-start flex-1">
+                <input type="checkbox" ${item.completed ? 'checked' : ''}
+                       onchange="views.toggleTodoInline('${item.id}', this.checked, '${entityType}', '${entityId}')"
+                       class="h-4 w-4 mt-1 text-green-600 rounded border-gray-300 cursor-pointer">
+                <div class="ml-2">
+                  <span class="inline-block px-2 py-0.5 text-xs rounded bg-green-100 text-green-700 mb-1">ToDo</span>
+                  <p class="text-gray-700 ${item.completed ? 'line-through' : ''}">${this.escapeHtml(item.content)}</p>
+                  ${item.description ? `<p class="text-sm text-gray-500 mt-1">${this.escapeHtml(item.description)}</p>` : ''}
+                  <p class="text-xs text-gray-400 mt-1">Due: ${formatDateTime(item.dueDate)} | Created: ${formatDateTime(item.createdAt)}</p>
+                </div>
+              </div>
+              <div class="flex gap-2 ml-4">
+                <button onclick="views.editTodoInline('${item.id}', '${entityType}', '${entityId}')" class="text-gray-400 hover:text-gray-600 text-sm">Edit</button>
+                <button onclick="views.deleteTodoInline('${item.id}', '${entityType}', '${entityId}')" class="text-red-400 hover:text-red-600 text-sm">Delete</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }).join('');
+  },
+
+  sortActivity(field) {
+    if (this._activitySort === field) {
+      this._activitySortAsc = !this._activitySortAsc;
+    } else {
+      this._activitySort = field;
+      this._activitySortAsc = field === 'type' ? true : false;
+    }
+
+    // Update sort indicators
+    document.querySelectorAll('.activity-sort').forEach(btn => {
+      const sortField = btn.dataset.sort;
+      const indicator = document.getElementById(`sort-activity-${sortField}`);
+      if (sortField === field) {
+        btn.classList.remove('text-gray-600');
+        btn.classList.add('text-blue-600', 'font-medium');
+        indicator.textContent = this._activitySortAsc ? '↑' : '↓';
+      } else {
+        btn.classList.remove('text-blue-600', 'font-medium');
+        btn.classList.add('text-gray-600');
+        indicator.textContent = '';
+      }
+    });
+
+    // Re-render the list
+    const contact = this._currentContact;
+    const todos = this._currentTodos;
+    if (contact) {
+      document.getElementById('activity-list').innerHTML =
+        this.renderActivityList(contact.notes, todos, contact.id, 'contact');
+    }
+  },
+
   async addNote(event, contactId) {
     event.preventDefault();
     const content = document.getElementById('new-note').value.trim();
     if (!content) return;
 
-    await api.post(`/api/contacts/${contactId}/notes`, { content });
+    const makeTodo = document.getElementById('make-todo')?.checked;
+
+    if (makeTodo) {
+      // Create as ToDo instead
+      await api.post('/api/todos', {
+        title: content,
+        description: '',
+        dueDate: new Date().toISOString(),
+        linkedType: 'contact',
+        linkedId: contactId
+      });
+    } else {
+      // Create as regular note
+      await api.post(`/api/contacts/${contactId}/notes`, { content });
+    }
     router.navigate('contact-detail', { id: contactId });
   },
 
@@ -547,7 +710,11 @@ const views = {
 
   // Company Detail View
   async companyDetail(container, id) {
-    const company = await api.get(`/api/companies/${id}`);
+    const [company, allTodos] = await Promise.all([
+      api.get(`/api/companies/${id}`),
+      api.get('/api/todos')
+    ]);
+    const todos = allTodos.filter(t => t.linkedType === 'company' && t.linkedId === id);
 
     container.innerHTML = `
       <div class="mb-6">
@@ -580,7 +747,7 @@ const views = {
         </div>
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg p-6">
+      <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-semibold text-gray-900">Contacts (${company.contacts.length})</h3>
           <button onclick="router.navigate('contact-form', {companyId: '${company.id}'})"
@@ -606,13 +773,151 @@ const views = {
           </div>
         `}
       </div>
+
+      <div class="bg-white shadow-sm rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Notes & ToDos</h3>
+
+        <form onsubmit="views.addCompanyTodo(event, '${company.id}')" class="mb-6">
+          <textarea id="company-new-note" rows="3" placeholder="Add a note or ToDo..."
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+          <div class="mt-2 flex items-center gap-4">
+            <label class="flex items-center gap-2 text-sm text-gray-600">
+              <input type="checkbox" id="company-make-todo" class="h-4 w-4 text-blue-600 rounded border-gray-300" checked>
+              Make this a ToDo
+            </label>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+              Add
+            </button>
+          </div>
+        </form>
+
+        <div class="mb-3 flex gap-2 text-sm">
+          <span class="text-gray-500">Sort by:</span>
+          <button onclick="views.sortCompanyActivity('date')" class="company-activity-sort text-blue-600 font-medium" data-sort="date">Date <span id="sort-company-activity-date">↓</span></button>
+          <button onclick="views.sortCompanyActivity('type')" class="company-activity-sort text-gray-600 hover:text-gray-800" data-sort="type">Type <span id="sort-company-activity-type"></span></button>
+        </div>
+
+        <div id="company-activity-list" class="space-y-4">
+          ${this.renderCompanyActivityList(todos, company.id)}
+        </div>
+      </div>
     `;
+
+    this._currentCompany = company;
+    this._companyTodos = todos;
+    this._companyActivitySort = 'date';
+    this._companyActivitySortAsc = false;
   },
 
   async deleteCompany(id) {
     if (!confirm('Delete this company and all its contacts?')) return;
     await api.delete(`/api/companies/${id}`);
     router.navigate('companies');
+  },
+
+  // Company activity list (todos only for companies, but could add company-level notes later)
+  renderCompanyActivityList(todos, companyId) {
+    const items = (todos || []).map(todo => ({
+      type: 'todo',
+      id: todo.id,
+      content: todo.title,
+      description: todo.description,
+      dueDate: todo.dueDate,
+      createdAt: todo.createdAt,
+      completed: todo.completed
+    }));
+
+    if (items.length === 0) {
+      return '<p class="text-gray-500">No ToDos yet</p>';
+    }
+
+    // Sort based on current sort setting
+    const sortField = this._companyActivitySort || 'date';
+    const sortAsc = this._companyActivitySortAsc !== undefined ? this._companyActivitySortAsc : false;
+
+    items.sort((a, b) => {
+      let result;
+      if (sortField === 'type') {
+        result = a.type.localeCompare(b.type);
+      } else {
+        result = new Date(b.createdAt) - new Date(a.createdAt);
+      }
+      return sortAsc ? -result : result;
+    });
+
+    return items.map(item => `
+      <div class="border-l-4 ${item.completed ? 'border-gray-300' : 'border-green-300'} pl-4 py-2 ${item.completed ? 'opacity-50' : ''}" data-todo-id="${item.id}">
+        <div class="flex justify-between items-start">
+          <div class="flex items-start flex-1">
+            <input type="checkbox" ${item.completed ? 'checked' : ''}
+                   onchange="views.toggleTodoInline('${item.id}', this.checked, 'company', '${companyId}')"
+                   class="h-4 w-4 mt-1 text-green-600 rounded border-gray-300 cursor-pointer">
+            <div class="ml-2">
+              <span class="inline-block px-2 py-0.5 text-xs rounded bg-green-100 text-green-700 mb-1">ToDo</span>
+              <p class="text-gray-700 ${item.completed ? 'line-through' : ''}">${this.escapeHtml(item.content)}</p>
+              ${item.description ? `<p class="text-sm text-gray-500 mt-1">${this.escapeHtml(item.description)}</p>` : ''}
+              <p class="text-xs text-gray-400 mt-1">Due: ${formatDateTime(item.dueDate)} | Created: ${formatDateTime(item.createdAt)}</p>
+            </div>
+          </div>
+          <div class="flex gap-2 ml-4">
+            <button onclick="views.editTodoInline('${item.id}', 'company', '${companyId}')" class="text-gray-400 hover:text-gray-600 text-sm">Edit</button>
+            <button onclick="views.deleteTodoInline('${item.id}', 'company', '${companyId}')" class="text-red-400 hover:text-red-600 text-sm">Delete</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  },
+
+  sortCompanyActivity(field) {
+    if (this._companyActivitySort === field) {
+      this._companyActivitySortAsc = !this._companyActivitySortAsc;
+    } else {
+      this._companyActivitySort = field;
+      this._companyActivitySortAsc = field === 'type' ? true : false;
+    }
+
+    // Update sort indicators
+    document.querySelectorAll('.company-activity-sort').forEach(btn => {
+      const sortField = btn.dataset.sort;
+      const indicator = document.getElementById(`sort-company-activity-${sortField}`);
+      if (sortField === field) {
+        btn.classList.remove('text-gray-600');
+        btn.classList.add('text-blue-600', 'font-medium');
+        indicator.textContent = this._companyActivitySortAsc ? '↑' : '↓';
+      } else {
+        btn.classList.remove('text-blue-600', 'font-medium');
+        btn.classList.add('text-gray-600');
+        indicator.textContent = '';
+      }
+    });
+
+    // Re-render the list
+    const company = this._currentCompany;
+    const todos = this._companyTodos;
+    if (company) {
+      document.getElementById('company-activity-list').innerHTML =
+        this.renderCompanyActivityList(todos, company.id);
+    }
+  },
+
+  async addCompanyTodo(event, companyId) {
+    event.preventDefault();
+    const content = document.getElementById('company-new-note').value.trim();
+    if (!content) return;
+
+    const makeTodo = document.getElementById('company-make-todo')?.checked;
+
+    if (makeTodo) {
+      await api.post('/api/todos', {
+        title: content,
+        description: '',
+        dueDate: new Date().toISOString(),
+        linkedType: 'company',
+        linkedId: companyId
+      });
+    }
+    // Note: Companies don't have notes in the current data model, so we only support todos for now
+    router.navigate('company-detail', { id: companyId });
   },
 
   // Company Form
@@ -687,6 +992,314 @@ const views = {
     } else {
       const company = await api.post('/api/companies', data);
       router.navigate('company-detail', { id: company.id });
+    }
+  },
+
+  // ToDo List View
+  async todoList(container) {
+    const todos = await api.get('/api/todos');
+
+    container.innerHTML = `
+      <div class="mb-6 flex justify-between items-center">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">ToDos</h2>
+          <p class="text-gray-600">${todos.filter(t => !t.completed).length} active, ${todos.filter(t => t.completed).length} completed</p>
+        </div>
+        <button onclick="views.showAddTodoModal()"
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+          Add ToDo
+        </button>
+      </div>
+
+      <div class="mb-4 flex gap-2">
+        <button onclick="views.filterTodos('all')" class="todo-filter px-3 py-1 rounded-lg bg-blue-100 text-blue-700" data-filter="all">All</button>
+        <button onclick="views.filterTodos('active')" class="todo-filter px-3 py-1 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="active">Active</button>
+        <button onclick="views.filterTodos('completed')" class="todo-filter px-3 py-1 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="completed">Completed</button>
+      </div>
+
+      <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+        <div id="todos-list" class="divide-y divide-gray-200">
+          ${this.renderTodoRows(todos)}
+        </div>
+      </div>
+    `;
+
+    this._todos = todos;
+    this._todoFilter = 'all';
+  },
+
+  renderTodoRows(todos) {
+    if (todos.length === 0) {
+      return `<div class="px-6 py-8 text-center text-gray-500">No ToDos found</div>`;
+    }
+    return todos.map(t => `
+      <div class="flex items-start px-6 py-4 ${t.completed ? 'bg-gray-50' : ''}" data-todo-id="${t.id}">
+        <input type="checkbox" ${t.completed ? 'checked' : ''}
+               onchange="views.toggleTodo('${t.id}', this.checked)"
+               class="h-5 w-5 mt-1 text-blue-600 rounded border-gray-300 cursor-pointer">
+        <div class="ml-4 flex-1 ${t.completed ? 'opacity-50' : ''}">
+          <div class="font-medium text-gray-900 ${t.completed ? 'line-through' : ''}">${this.escapeHtml(t.title)}</div>
+          ${t.description ? `<div class="text-sm text-gray-600 mt-1">${this.escapeHtml(t.description)}</div>` : ''}
+          <div class="text-sm text-gray-500 mt-1">
+            <span class="mr-3">${t.linkedType === 'contact' ? `${this.escapeHtml(t.linkedName)} @ ${this.escapeHtml(t.linkedCompanyName || '')}` : this.escapeHtml(t.linkedName)}</span>
+            <span class="text-gray-400">Due: ${formatDateTime(t.dueDate)}</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="views.navigateToLinked('${t.linkedType}', '${t.linkedId}')" class="text-blue-600 hover:text-blue-800 text-sm">View</button>
+          <button onclick="views.editTodo('${t.id}')" class="text-gray-400 hover:text-gray-600 text-sm">Edit</button>
+          <button onclick="views.deleteTodo('${t.id}')" class="text-red-400 hover:text-red-600 text-sm">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  },
+
+  async filterTodos(filter) {
+    this._todoFilter = filter;
+
+    // Update button styles
+    document.querySelectorAll('.todo-filter').forEach(btn => {
+      if (btn.dataset.filter === filter) {
+        btn.classList.remove('bg-gray-100', 'text-gray-600');
+        btn.classList.add('bg-blue-100', 'text-blue-700');
+      } else {
+        btn.classList.remove('bg-blue-100', 'text-blue-700');
+        btn.classList.add('bg-gray-100', 'text-gray-600');
+      }
+    });
+
+    let filtered = this._todos;
+    if (filter === 'active') {
+      filtered = this._todos.filter(t => !t.completed);
+    } else if (filter === 'completed') {
+      filtered = this._todos.filter(t => t.completed);
+    }
+
+    document.getElementById('todos-list').innerHTML = this.renderTodoRows(filtered);
+  },
+
+  async toggleTodo(id, completed) {
+    await api.put(`/api/todos/${id}`, { completed });
+    router.navigate('todos');
+  },
+
+  navigateToLinked(type, id) {
+    if (type === 'contact') {
+      router.navigate('contact-detail', { id });
+    } else {
+      router.navigate('company-detail', { id });
+    }
+  },
+
+  async showAddTodoModal(linkedType = null, linkedId = null) {
+    const companies = await api.get('/api/companies');
+    const contacts = await api.get('/api/contacts');
+
+    modal.show(`
+      <h3 class="text-lg font-semibold mb-4">Add ToDo</h3>
+      <form onsubmit="views.saveTodo(event)">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+          <input type="text" id="todo-title" required
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Link to *</label>
+          <select id="todo-linked-type" onchange="views.updateLinkedOptions()"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="contact" ${linkedType === 'contact' ? 'selected' : ''}>Contact</option>
+            <option value="company" ${linkedType === 'company' ? 'selected' : ''}>Company</option>
+          </select>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Select *</label>
+          <select id="todo-linked-id" required
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            ${linkedType === 'company' ?
+              companies.map(c => `<option value="${c.id}" ${c.id === linkedId ? 'selected' : ''}>${this.escapeHtml(c.name)}</option>`).join('') :
+              contacts.map(c => `<option value="${c.id}" ${c.id === linkedId ? 'selected' : ''}>${this.escapeHtml(c.name)} @ ${this.escapeHtml(c.companyName)}</option>`).join('')
+            }
+          </select>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+          <input type="datetime-local" id="todo-due-date" value="${new Date().toISOString().slice(0, 16)}"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <textarea id="todo-description" rows="3" placeholder="Additional details..."
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <button type="button" onclick="modal.hide()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Save</button>
+        </div>
+      </form>
+    `);
+
+    // Store data for updateLinkedOptions
+    this._modalCompanies = companies;
+    this._modalContacts = contacts;
+  },
+
+  updateLinkedOptions() {
+    const type = document.getElementById('todo-linked-type').value;
+    const select = document.getElementById('todo-linked-id');
+
+    if (type === 'company') {
+      select.innerHTML = this._modalCompanies.map(c =>
+        `<option value="${c.id}">${this.escapeHtml(c.name)}</option>`
+      ).join('');
+    } else {
+      select.innerHTML = this._modalContacts.map(c =>
+        `<option value="${c.id}">${this.escapeHtml(c.name)} @ ${this.escapeHtml(c.companyName)}</option>`
+      ).join('');
+    }
+  },
+
+  async saveTodo(event) {
+    event.preventDefault();
+
+    const dueDateInput = document.getElementById('todo-due-date').value;
+    const data = {
+      title: document.getElementById('todo-title').value,
+      description: document.getElementById('todo-description').value,
+      dueDate: dueDateInput ? new Date(dueDateInput).toISOString() : new Date().toISOString(),
+      linkedType: document.getElementById('todo-linked-type').value,
+      linkedId: document.getElementById('todo-linked-id').value
+    };
+
+    await api.post('/api/todos', data);
+    modal.hide();
+    router.navigate('todos');
+  },
+
+  async editTodo(id) {
+    const todo = this._todos.find(t => t.id === id);
+    if (!todo) return;
+
+    const dueDateValue = todo.dueDate ? new Date(todo.dueDate).toISOString().slice(0, 16) : '';
+
+    modal.show(`
+      <h3 class="text-lg font-semibold mb-4">Edit ToDo</h3>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+        <input type="text" id="edit-todo-title" value="${this.escapeHtml(todo.title)}"
+               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+        <input type="datetime-local" id="edit-todo-due-date" value="${dueDateValue}"
+               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <textarea id="edit-todo-description" rows="3"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">${this.escapeHtml(todo.description || '')}</textarea>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button onclick="modal.hide()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+        <button onclick="views.updateTodo('${id}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Save</button>
+      </div>
+    `);
+  },
+
+  async updateTodo(id) {
+    const title = document.getElementById('edit-todo-title').value.trim();
+    if (!title) return;
+
+    const dueDateInput = document.getElementById('edit-todo-due-date').value;
+    const data = {
+      title,
+      description: document.getElementById('edit-todo-description').value,
+      dueDate: dueDateInput ? new Date(dueDateInput).toISOString() : null
+    };
+
+    await api.put(`/api/todos/${id}`, data);
+    modal.hide();
+    router.navigate('todos');
+  },
+
+  async deleteTodo(id) {
+    if (!confirm('Delete this ToDo?')) return;
+    await api.delete(`/api/todos/${id}`);
+    router.navigate('todos');
+  },
+
+
+  async toggleTodoInline(todoId, completed, linkedType, linkedId) {
+    await api.put(`/api/todos/${todoId}`, { completed });
+    if (linkedType === 'contact') {
+      router.navigate('contact-detail', { id: linkedId });
+    } else {
+      router.navigate('company-detail', { id: linkedId });
+    }
+  },
+
+  async editTodoInline(todoId, linkedType, linkedId) {
+    const todos = linkedType === 'contact' ? this._currentTodos : this._companyTodos;
+    const todo = todos?.find(t => t.id === todoId);
+    if (!todo) return;
+
+    const dueDateValue = todo.dueDate ? new Date(todo.dueDate).toISOString().slice(0, 16) : '';
+
+    modal.show(`
+      <h3 class="text-lg font-semibold mb-4">Edit ToDo</h3>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+        <input type="text" id="edit-todo-title" value="${this.escapeHtml(todo.title)}"
+               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+        <input type="datetime-local" id="edit-todo-due-date" value="${dueDateValue}"
+               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <textarea id="edit-todo-description" rows="3"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">${this.escapeHtml(todo.description || '')}</textarea>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button onclick="modal.hide()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+        <button onclick="views.updateTodoInline('${todoId}', '${linkedType}', '${linkedId}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Save</button>
+      </div>
+    `);
+  },
+
+  async updateTodoInline(todoId, linkedType, linkedId) {
+    const title = document.getElementById('edit-todo-title').value.trim();
+    if (!title) return;
+
+    const dueDateInput = document.getElementById('edit-todo-due-date').value;
+    const data = {
+      title,
+      description: document.getElementById('edit-todo-description').value,
+      dueDate: dueDateInput ? new Date(dueDateInput).toISOString() : null
+    };
+
+    await api.put(`/api/todos/${todoId}`, data);
+    modal.hide();
+    if (linkedType === 'contact') {
+      router.navigate('contact-detail', { id: linkedId });
+    } else {
+      router.navigate('company-detail', { id: linkedId });
+    }
+  },
+
+  async deleteTodoInline(todoId, linkedType, linkedId) {
+    if (!confirm('Delete this ToDo?')) return;
+    await api.delete(`/api/todos/${todoId}`);
+    if (linkedType === 'contact') {
+      router.navigate('contact-detail', { id: linkedId });
+    } else {
+      router.navigate('company-detail', { id: linkedId });
     }
   },
 

@@ -24,7 +24,8 @@ function readData() {
     return {
       version: '1.0',
       lastModified: null,
-      companies: []
+      companies: [],
+      todos: []
     };
   }
 }
@@ -83,6 +84,45 @@ function getAllContacts(data) {
   return contacts;
 }
 
+// Find todo by ID
+function findTodo(data, todoId) {
+  if (!data.todos) return null;
+  return data.todos.find(t => t.id === todoId);
+}
+
+// Get todos for a specific entity (contact or company)
+function getTodosForEntity(data, linkedType, linkedId) {
+  if (!data.todos) return [];
+  return data.todos.filter(t => t.linkedType === linkedType && t.linkedId === linkedId);
+}
+
+// Get the name of a linked entity
+function getLinkedEntityName(data, linkedType, linkedId) {
+  if (linkedType === 'company') {
+    const company = findCompany(data, linkedId);
+    return company ? { name: company.name, companyName: null } : null;
+  } else if (linkedType === 'contact') {
+    const result = findContact(data, linkedId);
+    if (result) {
+      return { name: result.contact.name, companyName: result.company.name };
+    }
+  }
+  return null;
+}
+
+// Get all todos with linked entity info
+function getAllTodos(data) {
+  if (!data.todos) return [];
+  return data.todos.map(todo => {
+    const entityInfo = getLinkedEntityName(data, todo.linkedType, todo.linkedId);
+    return {
+      ...todo,
+      linkedName: entityInfo?.name || 'Unknown',
+      linkedCompanyName: entityInfo?.companyName || null
+    };
+  });
+}
+
 module.exports = {
   generateId,
   getTimestamp,
@@ -92,5 +132,9 @@ module.exports = {
   findContact,
   findNote,
   getLastNoteDate,
-  getAllContacts
+  getAllContacts,
+  findTodo,
+  getTodosForEntity,
+  getLinkedEntityName,
+  getAllTodos
 };
