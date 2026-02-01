@@ -33,6 +33,11 @@ app.use(express.json());
 app.use(session(sessionConfig));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Health check endpoint (for Railway/Render)
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 // Auth routes (no authentication required)
 app.use('/api/auth', require('./src/routes/auth'));
 
