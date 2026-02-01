@@ -24,24 +24,28 @@ A lightweight, locally-run CRM system for managing companies, contacts (persons 
    - View list of all companies
    - View all contacts for a specific company
 
-3. **Notes Management**
-   - Add timestamped notes to any contact. timestamp is default set to the current time when creating a note.
-   - View all notes for a contact (chronological order)
-   - Edit existing notes
-   - Delete notes
+3. **Notes & ToDos Management**
+   - Notes and ToDos are displayed in a unified "Notes & ToDos" list
+   - Each item shows a type label: "Note" (blue) or "ToDo" (green)
+   - List sortable by date (default, newest first) or by type
+   - When adding a new item, checkbox to "Make this a ToDo"
+     - Unchecked: creates a regular note
+     - Checked: creates a ToDo with the content as title
+   - Notes: timestamped text entries linked to contacts
+   - ToDos: actionable items with completion checkbox
+   - Edit and delete functionality for both types
 
 4. **ToDo Management**
    - ToDos view accessible from main navigation (Contacts | Companies | ToDos)
    - Add ToDos linked to a Company or a Contact
    - ToDos can be added from:
      - The ToDos list view
-     - Contact detail view
+     - Contact detail view (via "Make this a ToDo" checkbox)
      - Company detail view
-   - ToDo fields: title, description, completed status, linked entity (contact or company)
-   - ToDos displayed in Contact/Company detail views alongside notes
+   - ToDo fields: title, description, dueDate, completed status, linked entity (contact or company)
    - Checkbox to mark ToDo as completed
-   - Completed ToDos shown greyed out
-   - View all ToDos in a central list
+   - Completed ToDos shown greyed out with strikethrough
+   - View all ToDos in a central list with filters (All / Active / Completed)
 
 5. **Data Portability**
    - All data stored in a single JSON file
@@ -204,8 +208,9 @@ A lightweight, locally-run CRM system for managing companies, contacts (persons 
    - Company name (clickable link to company)
    - Edit contact button
    - Delete contact button
-   - List of all notes (newest first)
-   - "Add Note" form/button
+   - Combined "Notes & ToDos" list with type labels
+   - Sort options: by date (default) or by type
+   - Add form with "Make this a ToDo" checkbox
    - Back to contact list navigation
 
 3. **Company List**
@@ -216,11 +221,13 @@ A lightweight, locally-run CRM system for managing companies, contacts (persons 
    - Click company to view details
 
 4. **Company Detail**
-   - Company information (name, technologies)
+   - Company information (name, organizationNumber, address, technologies)
    - Edit company button
    - Delete company button
    - List of all contacts at this company
    - "Add Contact" button (pre-selects this company)
+   - "Notes & ToDos" section for company-level ToDos
+   - Sort options: by date (default) or by type
    - Back to company list navigation
 
 5. **Add/Edit Contact**
@@ -240,11 +247,13 @@ A lightweight, locally-run CRM system for managing companies, contacts (persons 
    - "Add ToDo" button
    - Click ToDo to navigate to linked contact/company
 
-8. **ToDo in Contact/Company Detail**
-   - ToDos shown in same list as notes
-   - Displayed with checkbox for completion
-   - Completed ToDos shown greyed out
-   - "Add ToDo" button/form
+8. **Notes & ToDos in Contact/Company Detail**
+   - Notes and ToDos shown in unified list with type labels
+   - Sortable by date (newest first) or by type
+   - Notes: blue label, text content
+   - ToDos: green label, checkbox for completion, due date display
+   - Completed ToDos shown greyed out with strikethrough
+   - Add form with "Make this a ToDo" checkbox option
 
 ### UI Principles
 
@@ -269,6 +278,14 @@ VibeCodingProject/
 │   ├── index.html      # Main HTML file
 │   ├── style.css       # Custom styles (if needed)
 │   └── app.js          # Frontend JavaScript
+├── src/
+│   ├── data.js         # Data layer (read/write JSON, helpers)
+│   └── routes/
+│       ├── companies.js  # Company API routes
+│       ├── contacts.js   # Contact API routes
+│       ├── notes.js      # Notes API routes
+│       ├── search.js     # Search API routes
+│       └── todos.js      # ToDo API routes
 └── SPECIFICATION.md    # This file
 ```
 
@@ -327,13 +344,13 @@ VibeCodingProject/
 ## Future Enhancements (Out of Scope for V1)
 
 - [ ] Tags/categories for companies and contacts
-- [ ] Due dates for ToDos
 - [ ] Import/export to CSV
 - [ ] Multiple data files (workspaces)
 - [ ] Dark mode toggle
 - [ ] Contact photo/avatar
 - [ ] Activity timeline across all contacts
 - [ ] Favorite/pin important contacts
+- [ ] Company-level notes (currently only ToDos supported for companies)
 
 ---
 
@@ -348,4 +365,7 @@ VibeCodingProject/
 - **Company Fields:** name, organizationNumber, address, technologies
 - **List Columns:** Contact name, Company name, Last note date
 - **Sort Options:** By name, company, or last note date
-- **ToDos:** Linked to contacts or companies, shown alongside notes with completion checkbox
+- **ToDos:** Linked to contacts or companies, with dueDate and description fields
+- **Notes & ToDos:** Combined in unified list view, sortable by date or type
+- **Add Note UX:** Checkbox option to "Make this a ToDo" when adding content
+- **Type Labels:** Notes (blue) and ToDos (green) visually distinguished
