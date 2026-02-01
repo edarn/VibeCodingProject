@@ -1,3 +1,7 @@
+console.log('Starting server...');
+console.log('PORT env:', process.env.PORT);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+
 // Catch startup errors
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
@@ -8,12 +12,17 @@ process.on('unhandledRejection', (err) => {
   process.exit(1);
 });
 
+console.log('Loading modules...');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+console.log('Loading express-session...');
 const session = require('express-session');
+console.log('Loading connect-sqlite3...');
 const SQLiteStore = require('connect-sqlite3')(session);
+console.log('Loading auth middleware...');
 const { requireAuth } = require('./src/middleware/auth');
+console.log('All modules loaded.');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
