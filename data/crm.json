@@ -1,0 +1,93 @@
+{
+  "version": "1.0",
+  "lastModified": "2026-02-01T15:57:53.379Z",
+  "companies": [
+    {
+      "id": "414e25e6-0e91-48ba-bcff-f6b87b6d9474",
+      "name": "Axis",
+      "technologies": "",
+      "createdAt": "2026-02-01T15:51:03.545Z",
+      "updatedAt": "2026-02-01T15:53:20.989Z",
+      "contacts": [
+        {
+          "id": "8140dfc9-95f7-444b-9f8e-d37e740162cb",
+          "name": "Ture",
+          "role": "Chef",
+          "department": "PTZ",
+          "description": "fjdsklaöfjsd fdjkalöfdas",
+          "email": "ture@axis.com",
+          "phone": "+46 4324366",
+          "createdAt": "2026-02-01T15:51:03.551Z",
+          "updatedAt": "2026-02-01T15:52:40.797Z",
+          "notes": [
+            {
+              "id": "6efd2645-c46a-4954-8425-40ca3fb56b21",
+              "content": "Träffades igår. Snackade och käkade semla",
+              "createdAt": "2026-02-01T15:51:22.229Z",
+              "updatedAt": "2026-02-01T15:51:22.229Z"
+            },
+            {
+              "id": "f4a9d645-1c45-4457-b120-9d7a7c6271dc",
+              "content": "Hurra så bra detta fungerar",
+              "createdAt": "2026-02-01T15:52:40.797Z",
+              "updatedAt": "2026-02-01T15:52:40.797Z"
+            }
+          ]
+        },
+        {
+          "id": "62672920-c8a1-4ee6-a1dc-7d572254bc37",
+          "name": "Svempa",
+          "role": "cool snubbe",
+          "department": "flax",
+          "description": "fjdsaklö fjsdkalö",
+          "email": "astt@sdfs.se",
+          "phone": "+565 33466",
+          "createdAt": "2026-02-01T15:53:11.675Z",
+          "updatedAt": "2026-02-01T15:53:20.989Z",
+          "notes": [
+            {
+              "id": "97a17cd0-80be-4b72-bfa1-84d4e1bb9a3b",
+              "content": "cooling",
+              "createdAt": "2026-02-01T15:53:16.399Z",
+              "updatedAt": "2026-02-01T15:53:16.399Z"
+            },
+            {
+              "id": "d6eca81c-6cc1-495c-979d-50581f6f05d7",
+              "content": "kuuling",
+              "createdAt": "2026-02-01T15:53:20.989Z",
+              "updatedAt": "2026-02-01T15:53:20.989Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "76554942-3258-4d89-b7c5-780ed8728630",
+      "name": "annat företag",
+      "technologies": "",
+      "createdAt": "2026-02-01T15:55:19.628Z",
+      "updatedAt": "2026-02-01T15:57:53.379Z",
+      "contacts": [
+        {
+          "id": "e0313782-3171-4d68-a2ac-f0410f547a77",
+          "name": "tjomp",
+          "role": "brusse",
+          "department": "jfkdlsöa ",
+          "description": "fkdlösajdf ölj klaö kgflsö jsdflaf",
+          "email": "thfds@se.se",
+          "phone": "+567899",
+          "createdAt": "2026-02-01T15:55:19.632Z",
+          "updatedAt": "2026-02-01T15:57:53.379Z",
+          "notes": [
+            {
+              "id": "1c59201e-4a32-4d9b-976c-be2a345cf191",
+              "content": "Här är en note",
+              "createdAt": "2026-02-01T15:57:53.379Z",
+              "updatedAt": "2026-02-01T15:57:53.379Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
