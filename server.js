@@ -1,28 +1,9 @@
-console.log('Starting server...');
-console.log('PORT env:', process.env.PORT);
-console.log('NODE_ENV:', process.env.NODE_ENV);
-
-// Catch startup errors
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
-  process.exit(1);
-});
-process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Rejection:', err);
-  process.exit(1);
-});
-
-console.log('Loading modules...');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-console.log('Loading express-session...');
 const session = require('express-session');
-console.log('Loading connect-sqlite3...');
 const SQLiteStore = require('connect-sqlite3')(session);
-console.log('Loading auth middleware...');
 const { requireAuth } = require('./src/middleware/auth');
-console.log('All modules loaded.');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,21 +15,11 @@ if (!fs.existsSync(sessionDir)) {
 }
 
 // Session configuration
-console.log('Creating SQLite session store in:', sessionDir);
-let sessionStore;
-try {
-  sessionStore = new SQLiteStore({
+const sessionConfig = {
+  store: new SQLiteStore({
     db: 'sessions.db',
     dir: sessionDir
-  });
-  console.log('SQLite session store created successfully');
-} catch (err) {
-  console.error('Failed to create SQLite session store:', err);
-  process.exit(1);
-}
-
-const sessionConfig = {
-  store: sessionStore,
+  }),
   secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
   resave: false,
   saveUninitialized: false,
@@ -89,18 +60,7 @@ app.get('/{*splat}', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start server (bind to 0.0.0.0 for Railway/Docker compatibility)
-const server = app.listen(PORT, '0.0.0.0', () => {
+// Start server (bind to 0.0.0.0 for container compatibility)
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`CRM running on port ${PORT}`);
-  console.log(`Server address: ${JSON.stringify(server.address())}`);
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('Warning: Using default session secret. Set SESSION_SECRET in production.');
-  }
-  // Keep-alive log every 30 seconds
-  setInterval(() => {
-    console.log(`Server still running on port ${PORT}...`);
-  }, 30000);
-}).on('error', (err) => {
-  console.error('Failed to start server:', err);
-  process.exit(1);
 });
