@@ -9,10 +9,17 @@ const { requireAuth } = require('./src/middleware/auth');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+// Ensure uploads directory exists (use volume path on Railway if available)
+const uploadsDir = process.env.DATABASE_PATH
+  ? path.join(path.dirname(process.env.DATABASE_PATH), 'uploads')
+  : path.join(__dirname, 'uploads');
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  console.log('Uploads directory:', uploadsDir);
+} catch (err) {
+  console.error('Warning: Could not create uploads directory:', err.message);
 }
 
 // Configure multer for file uploads
@@ -91,7 +98,7 @@ app.use('/api/search', requireAuth, require('./src/routes/search'));
 app.use('/api/todos', requireAuth, require('./src/routes/todos'));
 
 // Candidates routes with file upload middleware
-app.use('/api/candidates', requireAuth, require('./src/routes/candidates')(upload));
+app.use('/api/candidates', requireAuth, require('./src/routes/candidates')(upload, uploadsDir));
 
 // Serve index.html for SPA routes
 app.get('/{*splat}', (req, res) => {

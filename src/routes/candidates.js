@@ -3,7 +3,7 @@ const data = require('../data');
 const path = require('path');
 const fs = require('fs');
 
-module.exports = function(upload) {
+module.exports = function(upload, uploadsDir) {
   const router = express.Router();
 
 // GET /api/candidates - List all candidates
@@ -86,10 +86,14 @@ router.put('/:id', upload.single('resume'), (req, res) => {
 
     if (req.file) {
       // Delete old resume if exists
-      if (existing.resumeFilename) {
-        const oldPath = path.join(__dirname, '..', '..', 'uploads', existing.resumeFilename);
-        if (fs.existsSync(oldPath)) {
-          fs.unlinkSync(oldPath);
+      if (existing.resumeFilename && uploadsDir) {
+        const oldPath = path.join(uploadsDir, existing.resumeFilename);
+        try {
+          if (fs.existsSync(oldPath)) {
+            fs.unlinkSync(oldPath);
+          }
+        } catch (err) {
+          console.error('Warning: Could not delete old resume:', err.message);
         }
       }
       resumeFilename = req.file.filename;
@@ -122,10 +126,14 @@ router.delete('/:id', (req, res) => {
     }
 
     // Delete resume file if exists
-    if (existing.resumeFilename) {
-      const filePath = path.join(__dirname, '..', '..', 'uploads', existing.resumeFilename);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+    if (existing.resumeFilename && uploadsDir) {
+      const filePath = path.join(uploadsDir, existing.resumeFilename);
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      } catch (err) {
+        console.error('Warning: Could not delete resume file:', err.message);
       }
     }
 
@@ -155,7 +163,11 @@ router.get('/:id/resume', (req, res) => {
       return res.status(404).json({ error: 'No resume uploaded' });
     }
 
-    const filePath = path.join(__dirname, '..', '..', 'uploads', candidate.resumeFilename);
+    if (!uploadsDir) {
+      return res.status(500).json({ error: 'Uploads not configured' });
+    }
+
+    const filePath = path.join(uploadsDir, candidate.resumeFilename);
 
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'Resume file not found' });
