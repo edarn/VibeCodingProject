@@ -106,6 +106,23 @@ app.get('/{*splat}', (req, res) => {
 });
 
 // Start server (bind to 0.0.0.0 for container compatibility)
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`CRM running on port ${PORT}`);
+});
+
+// Graceful shutdown handling for Railway/container environments
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully...');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully...');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
 });
