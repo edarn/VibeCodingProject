@@ -1,3 +1,18 @@
+// Toggle user menu dropdown
+function toggleUserMenu() {
+  const dropdown = document.getElementById('user-menu-dropdown');
+  dropdown.classList.toggle('hidden');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('user-menu-dropdown');
+  const button = document.getElementById('user-menu-button');
+  if (dropdown && button && !dropdown.contains(e.target) && !button.contains(e.target)) {
+    dropdown.classList.add('hidden');
+  }
+});
+
 // Authentication module
 const auth = {
   currentUser: null,
@@ -8,6 +23,7 @@ const auth = {
       if (res.ok) {
         this.currentUser = await res.json();
         this.showLoggedInUI();
+        await teamManager.checkInvitations();
         return true;
       }
     } catch (err) {
@@ -23,6 +39,52 @@ const auth = {
     document.getElementById('user-section').classList.remove('hidden');
     document.getElementById('current-user').textContent = this.currentUser.username;
     document.getElementById('auth-modal').classList.add('hidden');
+
+    // Update user role badge
+    const roleBadge = document.getElementById('user-role-badge');
+    if (this.currentUser.role === 'owner') {
+      roleBadge.textContent = 'Owner';
+      roleBadge.className = 'px-2 py-0.5 text-xs rounded-full mr-2 bg-purple-100 text-purple-800';
+      roleBadge.classList.remove('hidden');
+    } else if (this.currentUser.role === 'member') {
+      roleBadge.textContent = 'Member';
+      roleBadge.className = 'px-2 py-0.5 text-xs rounded-full mr-2 bg-green-100 text-green-800';
+      roleBadge.classList.remove('hidden');
+    } else {
+      roleBadge.classList.add('hidden');
+    }
+
+    // Update team menu items
+    this.updateTeamMenu();
+  },
+
+  updateTeamMenu() {
+    const menuItems = document.getElementById('team-menu-items');
+    const divider = document.getElementById('menu-divider');
+
+    if (this.currentUser.role === 'owner') {
+      menuItems.innerHTML = `
+        <button onclick="router.navigate('team-settings'); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          Team Settings
+        </button>
+      `;
+      divider.classList.remove('hidden');
+    } else if (this.currentUser.role === 'member') {
+      menuItems.innerHTML = `
+        <button onclick="teamManager.leaveTeam(); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+          Leave Team
+        </button>
+      `;
+      divider.classList.remove('hidden');
+    } else {
+      // Solo user - show option to invite/create team
+      menuItems.innerHTML = `
+        <button onclick="router.navigate('team-settings'); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          Invite Team Members
+        </button>
+      `;
+      divider.classList.remove('hidden');
+    }
   },
 
   showLoginModal() {
@@ -136,6 +198,7 @@ const auth = {
 
       this.currentUser = data;
       this.showLoggedInUI();
+      await teamManager.checkInvitations();
       router.navigate('contacts');
     } catch (err) {
       console.error('Login error:', err);
@@ -166,6 +229,7 @@ const auth = {
 
       this.currentUser = data;
       this.showLoggedInUI();
+      await teamManager.checkInvitations();
       router.navigate('contacts');
     } catch (err) {
       console.error('Register error:', err);
@@ -300,6 +364,9 @@ const router = {
         case 'candidate-form':
           await views.candidateForm(app, params.id);
           break;
+        case 'team-settings':
+          await views.teamSettings(app);
+          break;
         default:
           await views.contactList(app);
       }
@@ -326,6 +393,172 @@ const modal = {
 document.getElementById('modal')?.addEventListener('click', (e) => {
   if (e.target.id === 'modal') modal.hide();
 });
+
+// Team Manager module
+const teamManager = {
+  pendingInvitation: null,
+  hasSoloData: false,
+
+  async checkInvitations() {
+    try {
+      const data = await api.get('/api/invitations');
+      if (data.invitations && data.invitations.length > 0) {
+        this.pendingInvitation = data.invitations[0];
+        this.hasSoloData = data.hasSoloData;
+        this.showInvitationBanner();
+      } else {
+        this.hideInvitationBanner();
+      }
+    } catch (err) {
+      console.error('Error checking invitations:', err);
+    }
+  },
+
+  showInvitationBanner() {
+    const banner = document.getElementById('invitation-banner');
+    const text = document.getElementById('invitation-text');
+    if (banner && text && this.pendingInvitation) {
+      text.textContent = `You've been invited to join ${this.pendingInvitation.inviterUsername}'s team.`;
+      banner.classList.remove('hidden');
+    }
+  },
+
+  hideInvitationBanner() {
+    const banner = document.getElementById('invitation-banner');
+    if (banner) {
+      banner.classList.add('hidden');
+    }
+    this.pendingInvitation = null;
+  },
+
+  showAcceptModal() {
+    if (!this.pendingInvitation) return;
+
+    let mergeOption = '';
+    if (this.hasSoloData) {
+      mergeOption = `
+        <div class="mb-4">
+          <p class="text-sm text-gray-600 mb-2">You have existing data. What would you like to do with it?</p>
+          <div class="space-y-2">
+            <label class="flex items-center">
+              <input type="radio" name="merge-choice" value="merge" checked class="mr-2">
+              <span class="text-sm">Merge my data into the team</span>
+            </label>
+            <label class="flex items-center">
+              <input type="radio" name="merge-choice" value="fresh" class="mr-2">
+              <span class="text-sm">Start fresh (my data will be deleted)</span>
+            </label>
+          </div>
+        </div>
+      `;
+    }
+
+    modal.show(`
+      <h3 class="text-lg font-semibold mb-4">Join Team</h3>
+      <p class="text-gray-600 mb-4">
+        You're about to join <strong>${this.pendingInvitation.inviterUsername}</strong>'s team.
+        You'll have access to all team data and can collaborate with other members.
+      </p>
+      ${mergeOption}
+      <div class="flex justify-end space-x-2">
+        <button onclick="modal.hide()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+          Cancel
+        </button>
+        <button onclick="teamManager.acceptInvitation()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          Join Team
+        </button>
+      </div>
+    `);
+  },
+
+  async acceptInvitation() {
+    if (!this.pendingInvitation) return;
+
+    const mergeChoice = document.querySelector('input[name="merge-choice"]:checked');
+    const mergeData = mergeChoice ? mergeChoice.value === 'merge' : false;
+
+    try {
+      await api.post(`/api/invitations/${this.pendingInvitation.id}/accept`, { mergeData });
+      modal.hide();
+      this.hideInvitationBanner();
+      // Refresh user data
+      await auth.checkAuth();
+      router.navigate('contacts');
+    } catch (err) {
+      console.error('Error accepting invitation:', err);
+      alert('Failed to accept invitation. Please try again.');
+    }
+  },
+
+  async declineInvitation() {
+    if (!this.pendingInvitation) return;
+
+    if (!confirm('Are you sure you want to decline this invitation?')) return;
+
+    try {
+      await api.post(`/api/invitations/${this.pendingInvitation.id}/decline`, {});
+      this.hideInvitationBanner();
+    } catch (err) {
+      console.error('Error declining invitation:', err);
+      alert('Failed to decline invitation. Please try again.');
+    }
+  },
+
+  async leaveTeam() {
+    if (!confirm('Are you sure you want to leave this team? All data you created will stay with the team, and you will start with an empty dataset.')) {
+      return;
+    }
+
+    try {
+      await api.post('/api/team/leave', {});
+      await auth.checkAuth();
+      router.navigate('contacts');
+    } catch (err) {
+      console.error('Error leaving team:', err);
+      alert('Failed to leave team. Please try again.');
+    }
+  },
+
+  async inviteMember(email) {
+    try {
+      await api.post('/api/team/invite', { email });
+      return { success: true };
+    } catch (err) {
+      console.error('Error inviting member:', err);
+      return { error: 'Failed to send invitation' };
+    }
+  },
+
+  async removeMember(memberId) {
+    try {
+      await api.delete(`/api/team/members/${memberId}`);
+      return { success: true };
+    } catch (err) {
+      console.error('Error removing member:', err);
+      return { error: 'Failed to remove member' };
+    }
+  },
+
+  async cancelInvitation(invitationId) {
+    try {
+      await api.delete(`/api/team/invite/${invitationId}`);
+      return { success: true };
+    } catch (err) {
+      console.error('Error cancelling invitation:', err);
+      return { error: 'Failed to cancel invitation' };
+    }
+  },
+
+  async transferOwnership(newOwnerId) {
+    try {
+      await api.post('/api/team/transfer', { newOwnerId });
+      return { success: true };
+    } catch (err) {
+      console.error('Error transferring ownership:', err);
+      return { error: 'Failed to transfer ownership' };
+    }
+  }
+};
 
 // Format date for display
 function formatDate(isoString) {
@@ -1896,6 +2129,173 @@ const views = {
       if (err.message !== 'Authentication required') {
         alert('Error: ' + err.message);
       }
+    }
+  },
+
+  // Team Settings View (Owner or Solo user who wants to create a team)
+  async teamSettings(container) {
+    if (auth.currentUser.role === 'member') {
+      router.navigate('contacts');
+      return;
+    }
+
+    const teamData = await api.get('/api/team');
+    const isSolo = auth.currentUser.role === 'solo';
+
+    container.innerHTML = `
+      <div class="mb-6">
+        <a href="#" onclick="router.navigate('contacts'); return false;" class="text-blue-600 hover:text-blue-800">
+          ← Back to Contacts
+        </a>
+      </div>
+
+      <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">${isSolo ? 'Create a Team' : 'Team Settings'}</h2>
+
+        ${isSolo ? `
+        <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+          <p class="text-blue-800">Invite someone to create a team. Once they accept, you'll both be able to see and edit all data. You'll become the team owner.</p>
+        </div>
+        ` : ''}
+
+        <!-- Invite Member -->
+        <div class="mb-8">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Invite Team Member</h3>
+          <form onsubmit="views.sendInvitation(event)" class="flex gap-2">
+            <input type="email" id="invite-email" placeholder="Enter email address" required
+                   class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+              Send Invitation
+            </button>
+          </form>
+          <div id="invite-message" class="mt-2 text-sm hidden"></div>
+        </div>
+
+        ${!isSolo ? `
+        <!-- Pending Invitations -->
+        <div class="mb-8">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Pending Invitations</h3>
+          <div id="pending-invitations">
+            ${this.renderPendingInvitations(teamData.invitations)}
+          </div>
+        </div>
+
+        <!-- Team Members -->
+        <div class="mb-8">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Team Members</h3>
+          <div id="team-members" class="space-y-2">
+            ${this.renderTeamMembers(teamData.members)}
+          </div>
+        </div>
+
+        <!-- Transfer Ownership -->
+        ${teamData.members && teamData.members.filter(m => !m.isOwner).length > 0 ? `
+        <div class="border-t pt-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Transfer Ownership</h3>
+          <p class="text-sm text-gray-600 mb-4">Transfer team ownership to another member. You will become a regular member after the transfer.</p>
+          <div class="flex gap-2">
+            <select id="new-owner-select" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+              <option value="">Select a member...</option>
+              ${teamData.members.filter(m => !m.isOwner).map(m => `
+                <option value="${m.id}">${this.escapeHtml(m.username)} (${this.escapeHtml(m.email)})</option>
+              `).join('')}
+            </select>
+            <button onclick="views.transferOwnership()" class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition">
+              Transfer
+            </button>
+          </div>
+        </div>
+        ` : ''}
+        ` : ''}
+      </div>
+    `;
+
+    this._teamData = teamData;
+  },
+
+  renderPendingInvitations(invitations) {
+    if (!invitations || invitations.length === 0) {
+      return '<p class="text-gray-500">No pending invitations</p>';
+    }
+    return invitations.map(inv => `
+      <div class="flex items-center justify-between py-2 border-b border-gray-100">
+        <div>
+          <span class="text-gray-900">${this.escapeHtml(inv.email)}</span>
+          <span class="text-sm text-gray-500 ml-2">Sent ${formatDate(inv.createdAt)}</span>
+        </div>
+        <button onclick="views.cancelInvitation('${inv.id}')" class="text-red-600 hover:text-red-800 text-sm">
+          Cancel
+        </button>
+      </div>
+    `).join('');
+  },
+
+  renderTeamMembers(members) {
+    return members.map(m => `
+      <div class="flex items-center justify-between py-2 border-b border-gray-100">
+        <div class="flex items-center gap-2">
+          <span class="text-gray-900">${this.escapeHtml(m.username)}</span>
+          <span class="text-sm text-gray-500">(${this.escapeHtml(m.email)})</span>
+          ${m.isOwner ? '<span class="px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-800">Owner</span>' : ''}
+        </div>
+        ${!m.isOwner ? `
+          <button onclick="views.removeMember('${m.id}')" class="text-red-600 hover:text-red-800 text-sm">
+            Remove
+          </button>
+        ` : ''}
+      </div>
+    `).join('');
+  },
+
+  async sendInvitation(event) {
+    event.preventDefault();
+    const email = document.getElementById('invite-email').value;
+    const messageEl = document.getElementById('invite-message');
+
+    const result = await teamManager.inviteMember(email);
+
+    if (result.success) {
+      messageEl.textContent = 'Invitation sent successfully!';
+      messageEl.className = 'mt-2 text-sm text-green-600';
+      messageEl.classList.remove('hidden');
+      document.getElementById('invite-email').value = '';
+      // Refresh auth state (user may have become owner)
+      await auth.checkAuth();
+      // Refresh the view
+      await this.teamSettings(document.getElementById('app'));
+    } else {
+      messageEl.textContent = result.error || 'Failed to send invitation';
+      messageEl.className = 'mt-2 text-sm text-red-600';
+      messageEl.classList.remove('hidden');
+    }
+  },
+
+  async cancelInvitation(invitationId) {
+    if (!confirm('Cancel this invitation?')) return;
+    await teamManager.cancelInvitation(invitationId);
+    await this.teamSettings(document.getElementById('app'));
+  },
+
+  async removeMember(memberId) {
+    if (!confirm('Remove this team member? They will lose access to team data but their created data will stay.')) return;
+    await teamManager.removeMember(memberId);
+    await this.teamSettings(document.getElementById('app'));
+  },
+
+  async transferOwnership() {
+    const newOwnerId = document.getElementById('new-owner-select').value;
+    if (!newOwnerId) {
+      alert('Please select a member to transfer ownership to.');
+      return;
+    }
+    if (!confirm('Are you sure you want to transfer ownership? You will become a regular member.')) return;
+
+    const result = await teamManager.transferOwnership(newOwnerId);
+    if (result.success) {
+      await auth.checkAuth();
+      router.navigate('contacts');
+    } else {
+      alert(result.error || 'Failed to transfer ownership');
     }
   },
 

@@ -100,6 +100,10 @@ app.use('/api/todos', requireAuth, require('./src/routes/todos'));
 // Candidates routes with file upload middleware
 app.use('/api/candidates', requireAuth, require('./src/routes/candidates')(upload, uploadsDir));
 
+// Team management routes
+app.use('/api/team', requireAuth, require('./src/routes/team'));
+app.use('/api/invitations', requireAuth, require('./src/routes/invitations'));
+
 // Serve index.html for SPA routes
 app.get('/{*splat}', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

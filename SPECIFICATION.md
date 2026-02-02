@@ -14,23 +14,44 @@ A lightweight, multi-user CRM system for managing companies, contacts, job candi
    - Protected routes requiring authentication
    - Logout functionality
 
-2. **Contact Management**
+2. **Multi-Tenancy & Team Collaboration**
+   - Each user has isolated data by default (solo mode)
+   - Users can create a team by inviting others via email
+   - Team members share all data with full view/edit access
+   - Three user roles:
+     - **Solo**: Using own isolated data, no team
+     - **Owner**: Has a team, full control, can manage members
+     - **Member**: Part of a team, can edit all data, can only delete own creations
+   - All entities track who created them (created_by field)
+   - Team invitation flow:
+     - Owner invites by email
+     - Invitation appears for users on login (banner + settings)
+     - Invited user can accept (with merge/fresh start option) or decline
+   - Team management (owner only):
+     - View team members
+     - Send/cancel invitations
+     - Remove members (their data stays with team)
+     - Transfer ownership to another member
+   - Members can leave a team voluntarily (data stays with team)
+   - Owner cannot delete account while team has members
+
+3. **Contact Management**
    - Main view: list of all contacts across all companies
    - Contact fields: name, role, department, description, email, phone
    - Add new contacts linked to a company
    - Edit existing contacts
-   - Delete contacts
+   - Delete contacts (owner can delete any, member only own creations)
    - Search/filter contacts by name, company, or any field
    - Sort contact list by name, company, or last note date
 
-3. **Company Management**
+4. **Company Management**
    - Add new companies with name, organization number, address, and technologies
    - Edit existing companies
-   - Delete companies (and associated contacts)
+   - Delete companies (owner can delete any, member only own creations)
    - View list of all companies
    - View all contacts for a specific company
 
-4. **Candidate Management**
+5. **Candidate Management**
    - Separate tab for managing job candidates (independent from contacts)
    - Candidate fields: name, email, phone, role, skills
    - Resume file upload (PDF, DOC, DOCX, max 10MB)
@@ -39,7 +60,7 @@ A lightweight, multi-user CRM system for managing companies, contacts, job candi
    - Full-text search across all candidate fields
    - Sort candidates by name, role, or skills
 
-5. **Notes & ToDos Management**
+6. **Notes & ToDos Management**
    - Notes and ToDos are displayed in a unified "Notes & ToDos" list
    - Each item shows a type label: "Note" (blue) or "ToDo" (green)
    - List sortable by date (default, newest first) or by type
@@ -50,7 +71,7 @@ A lightweight, multi-user CRM system for managing companies, contacts, job candi
    - ToDos: actionable items with completion checkbox
    - Edit and delete functionality for both types
 
-6. **ToDo Management**
+7. **ToDo Management**
    - ToDos view accessible from main navigation
    - Add ToDos linked to a Company or a Contact
    - ToDos can be added from:
@@ -62,7 +83,7 @@ A lightweight, multi-user CRM system for managing companies, contacts, job candi
    - Completed ToDos shown greyed out with strikethrough
    - View all ToDos in a central list with filters (All / Active / Completed)
 
-7. **Data Storage**
+8. **Data Storage**
    - SQLite database for structured data storage
    - File system storage for uploaded resumes
    - Support for persistent volumes on cloud platforms (Railway)
@@ -104,8 +125,46 @@ CREATE TABLE users (
   username TEXT UNIQUE NOT NULL,
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
+  team_id TEXT,
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (team_id) REFERENCES teams(id)
+)
+```
+
+#### Teams Table
+```sql
+CREATE TABLE teams (
+  id TEXT PRIMARY KEY,
+  owner_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (owner_id) REFERENCES users(id)
+)
+```
+
+#### Team Members Table
+```sql
+CREATE TABLE team_members (
+  team_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  joined_at TEXT NOT NULL,
+  PRIMARY KEY (team_id, user_id),
+  FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+)
+```
+
+#### Team Invitations Table
+```sql
+CREATE TABLE team_invitations (
+  id TEXT PRIMARY KEY,
+  team_id TEXT,
+  inviter_id TEXT NOT NULL,
+  email TEXT NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'cancelled')),
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+  FOREIGN KEY (inviter_id) REFERENCES users(id)
 )
 ```
 
@@ -117,8 +176,12 @@ CREATE TABLE companies (
   technologies TEXT DEFAULT '',
   organization_number TEXT DEFAULT '',
   address TEXT DEFAULT '',
+  team_id TEXT,
+  created_by TEXT,
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+  FOREIGN KEY (created_by) REFERENCES users(id)
 )
 ```
 
@@ -133,9 +196,13 @@ CREATE TABLE contacts (
   description TEXT DEFAULT '',
   email TEXT DEFAULT '',
   phone TEXT DEFAULT '',
+  team_id TEXT,
+  created_by TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
-  FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+  FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+  FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+  FOREIGN KEY (created_by) REFERENCES users(id)
 )
 ```
 
@@ -145,9 +212,13 @@ CREATE TABLE notes (
   id TEXT PRIMARY KEY,
   contact_id TEXT NOT NULL,
   content TEXT NOT NULL,
+  team_id TEXT,
+  created_by TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
-  FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
+  FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE,
+  FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+  FOREIGN KEY (created_by) REFERENCES users(id)
 )
 ```
 
@@ -162,8 +233,12 @@ CREATE TABLE todos (
   completed_at TEXT,
   linked_type TEXT NOT NULL CHECK (linked_type IN ('contact', 'company')),
   linked_id TEXT NOT NULL,
+  team_id TEXT,
+  created_by TEXT,
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+  FOREIGN KEY (created_by) REFERENCES users(id)
 )
 ```
 
@@ -178,8 +253,12 @@ CREATE TABLE candidates (
   skills TEXT DEFAULT '',
   resume_filename TEXT DEFAULT '',
   resume_original_name TEXT DEFAULT '',
+  team_id TEXT,
+  created_by TEXT,
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+  FOREIGN KEY (created_by) REFERENCES users(id)
 )
 ```
 
@@ -189,9 +268,13 @@ CREATE TABLE candidate_comments (
   id TEXT PRIMARY KEY,
   candidate_id TEXT NOT NULL,
   content TEXT NOT NULL,
+  team_id TEXT,
+  created_by TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
-  FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE CASCADE
+  FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE CASCADE,
+  FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+  FOREIGN KEY (created_by) REFERENCES users(id)
 )
 ```
 
@@ -358,7 +441,9 @@ VibeCodingProject/
 │       ├── notes.js       # Notes API routes
 │       ├── search.js      # Search API routes
 │       ├── todos.js       # ToDo API routes
-│       └── candidates.js  # Candidate API routes
+│       ├── candidates.js  # Candidate API routes
+│       ├── team.js        # Team management routes
+│       └── invitations.js # Invitation routes
 └── scripts/
     ├── migrate-json-to-sqlite.js  # Migration script
     └── seed-test-data.js          # Test data seeder
@@ -372,10 +457,30 @@ VibeCodingProject/
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | /api/auth/register | Register new user |
-| POST | /api/auth/login | Login user |
+| POST | /api/auth/register | Register new user (returns role and team info) |
+| POST | /api/auth/login | Login user (returns role and team info) |
 | POST | /api/auth/logout | Logout user |
-| GET | /api/auth/me | Get current user |
+| GET | /api/auth/me | Get current user with role and team info |
+
+### Team Management (Protected)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/team | Get current user's team info (or null if solo) |
+| GET | /api/team/members | List team members (owner only) |
+| POST | /api/team/invite | Send invitation by email (owner only) |
+| DELETE | /api/team/invite/:id | Cancel pending invitation (owner only) |
+| POST | /api/team/transfer | Transfer ownership to member (owner only) |
+| POST | /api/team/leave | Leave team (member only) |
+| DELETE | /api/team/members/:id | Remove member from team (owner only) |
+
+### Invitations (Protected)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/invitations | Get pending invitations for current user |
+| POST | /api/invitations/:id/accept | Accept invitation (with mergeData option) |
+| POST | /api/invitations/:id/decline | Decline invitation |
 
 ### Companies (Protected)
 

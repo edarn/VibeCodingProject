@@ -9,7 +9,8 @@ module.exports = function(upload, uploadsDir) {
 // GET /api/candidates - List all candidates
 router.get('/', (req, res) => {
   try {
-    const candidates = data.getAllCandidates();
+    const userId = req.session.userId;
+    const candidates = data.getAllCandidates(userId);
     res.json(candidates);
   } catch (err) {
     console.error('Error fetching candidates:', err);
@@ -20,7 +21,8 @@ router.get('/', (req, res) => {
 // GET /api/candidates/:id - Get single candidate with comments
 router.get('/:id', (req, res) => {
   try {
-    const candidate = data.getCandidateById(req.params.id);
+    const userId = req.session.userId;
+    const candidate = data.getCandidateById(req.params.id, userId);
 
     if (!candidate) {
       return res.status(404).json({ error: 'Candidate not found' });
@@ -36,6 +38,7 @@ router.get('/:id', (req, res) => {
 // POST /api/candidates - Create new candidate (multipart/form-data)
 router.post('/', upload.single('resume'), (req, res) => {
   try {
+    const userId = req.session.userId;
     const { name, email, phone, role, skills } = req.body;
 
     if (!name || !name.trim()) {
@@ -58,7 +61,7 @@ router.post('/', upload.single('resume'), (req, res) => {
       skills,
       resumeFilename,
       resumeOriginalName
-    });
+    }, userId);
 
     res.status(201).json(newCandidate);
   } catch (err) {
@@ -70,13 +73,14 @@ router.post('/', upload.single('resume'), (req, res) => {
 // PUT /api/candidates/:id - Update candidate (multipart/form-data)
 router.put('/:id', upload.single('resume'), (req, res) => {
   try {
+    const userId = req.session.userId;
     const { name, email, phone, role, skills } = req.body;
 
     if (name !== undefined && !name.trim()) {
       return res.status(400).json({ error: 'Candidate name cannot be empty' });
     }
 
-    const existing = data.getCandidateById(req.params.id);
+    const existing = data.getCandidateById(req.params.id, userId);
     if (!existing) {
       return res.status(404).json({ error: 'Candidate not found' });
     }
@@ -108,7 +112,7 @@ router.put('/:id', upload.single('resume'), (req, res) => {
       skills,
       resumeFilename,
       resumeOriginalName
-    });
+    }, userId);
 
     res.json(updated);
   } catch (err) {
@@ -120,7 +124,8 @@ router.put('/:id', upload.single('resume'), (req, res) => {
 // DELETE /api/candidates/:id - Delete candidate
 router.delete('/:id', (req, res) => {
   try {
-    const existing = data.getCandidateById(req.params.id);
+    const userId = req.session.userId;
+    const existing = data.getCandidateById(req.params.id, userId);
     if (!existing) {
       return res.status(404).json({ error: 'Candidate not found' });
     }
@@ -137,10 +142,13 @@ router.delete('/:id', (req, res) => {
       }
     }
 
-    const deleted = data.deleteCandidate(req.params.id);
+    const result = data.deleteCandidate(req.params.id, userId);
 
-    if (!deleted) {
-      return res.status(404).json({ error: 'Candidate not found' });
+    if (result.error) {
+      if (result.error === 'Candidate not found') {
+        return res.status(404).json({ error: result.error });
+      }
+      return res.status(403).json({ error: result.error });
     }
 
     res.status(204).send();
@@ -153,7 +161,8 @@ router.delete('/:id', (req, res) => {
 // GET /api/candidates/:id/resume - Download resume
 router.get('/:id/resume', (req, res) => {
   try {
-    const candidate = data.getCandidateById(req.params.id);
+    const userId = req.session.userId;
+    const candidate = data.getCandidateById(req.params.id, userId);
 
     if (!candidate) {
       return res.status(404).json({ error: 'Candidate not found' });
@@ -183,13 +192,14 @@ router.get('/:id/resume', (req, res) => {
 // POST /api/candidates/:id/comments - Add comment
 router.post('/:id/comments', (req, res) => {
   try {
+    const userId = req.session.userId;
     const { content } = req.body;
 
     if (!content || !content.trim()) {
       return res.status(400).json({ error: 'Comment content is required' });
     }
 
-    const comment = data.createCandidateComment(req.params.id, content.trim());
+    const comment = data.createCandidateComment(req.params.id, content.trim(), userId);
 
     if (!comment) {
       return res.status(404).json({ error: 'Candidate not found' });
@@ -205,13 +215,14 @@ router.post('/:id/comments', (req, res) => {
 // PUT /api/candidates/:id/comments/:commentId - Update comment
 router.put('/:id/comments/:commentId', (req, res) => {
   try {
+    const userId = req.session.userId;
     const { content } = req.body;
 
     if (!content || !content.trim()) {
       return res.status(400).json({ error: 'Comment content is required' });
     }
 
-    const comment = data.updateCandidateComment(req.params.id, req.params.commentId, content.trim());
+    const comment = data.updateCandidateComment(req.params.id, req.params.commentId, content.trim(), userId);
 
     if (!comment) {
       return res.status(404).json({ error: 'Comment not found' });
@@ -227,10 +238,14 @@ router.put('/:id/comments/:commentId', (req, res) => {
 // DELETE /api/candidates/:id/comments/:commentId - Delete comment
 router.delete('/:id/comments/:commentId', (req, res) => {
   try {
-    const deleted = data.deleteCandidateComment(req.params.id, req.params.commentId);
+    const userId = req.session.userId;
+    const result = data.deleteCandidateComment(req.params.id, req.params.commentId, userId);
 
-    if (!deleted) {
-      return res.status(404).json({ error: 'Comment not found' });
+    if (result.error) {
+      if (result.error === 'Comment not found' || result.error === 'Candidate not found') {
+        return res.status(404).json({ error: result.error });
+      }
+      return res.status(403).json({ error: result.error });
     }
 
     res.status(204).send();

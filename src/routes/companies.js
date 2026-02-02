@@ -5,7 +5,8 @@ const data = require('../data');
 // GET /api/companies - List all companies
 router.get('/', (req, res) => {
   try {
-    const companies = data.getAllCompanies();
+    const userId = req.session.userId;
+    const companies = data.getAllCompanies(userId);
     res.json(companies);
   } catch (err) {
     console.error('Error fetching companies:', err);
@@ -16,7 +17,8 @@ router.get('/', (req, res) => {
 // GET /api/companies/:id - Get single company with contacts
 router.get('/:id', (req, res) => {
   try {
-    const company = data.getCompanyById(req.params.id);
+    const userId = req.session.userId;
+    const company = data.getCompanyById(req.params.id, userId);
 
     if (!company) {
       return res.status(404).json({ error: 'Company not found' });
@@ -32,6 +34,7 @@ router.get('/:id', (req, res) => {
 // POST /api/companies - Create new company
 router.post('/', (req, res) => {
   try {
+    const userId = req.session.userId;
     const { name, technologies, organizationNumber, address } = req.body;
 
     if (!name || !name.trim()) {
@@ -43,7 +46,7 @@ router.post('/', (req, res) => {
       technologies,
       organizationNumber,
       address
-    });
+    }, userId);
 
     res.status(201).json(newCompany);
   } catch (err) {
@@ -55,6 +58,7 @@ router.post('/', (req, res) => {
 // PUT /api/companies/:id - Update company
 router.put('/:id', (req, res) => {
   try {
+    const userId = req.session.userId;
     const { name, technologies, organizationNumber, address } = req.body;
 
     if (name !== undefined && !name.trim()) {
@@ -66,7 +70,7 @@ router.put('/:id', (req, res) => {
       technologies,
       organizationNumber,
       address
-    });
+    }, userId);
 
     if (!updated) {
       return res.status(404).json({ error: 'Company not found' });
@@ -82,10 +86,14 @@ router.put('/:id', (req, res) => {
 // DELETE /api/companies/:id - Delete company and all contacts
 router.delete('/:id', (req, res) => {
   try {
-    const deleted = data.deleteCompany(req.params.id);
+    const userId = req.session.userId;
+    const result = data.deleteCompany(req.params.id, userId);
 
-    if (!deleted) {
-      return res.status(404).json({ error: 'Company not found' });
+    if (result.error) {
+      if (result.error === 'Company not found') {
+        return res.status(404).json({ error: result.error });
+      }
+      return res.status(403).json({ error: result.error });
     }
 
     res.status(204).send();

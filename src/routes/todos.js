@@ -5,8 +5,9 @@ const data = require('../data');
 // GET /api/todos - List all todos
 router.get('/', (req, res) => {
   try {
+    const userId = req.session.userId;
     const filter = req.query.filter || 'all';
-    const todos = data.getAllTodos(filter);
+    const todos = data.getAllTodos(userId, filter);
     res.json(todos);
   } catch (err) {
     console.error('Error fetching todos:', err);
@@ -17,7 +18,8 @@ router.get('/', (req, res) => {
 // GET /api/todos/:id - Get single todo
 router.get('/:id', (req, res) => {
   try {
-    const todo = data.getTodoById(req.params.id);
+    const userId = req.session.userId;
+    const todo = data.getTodoById(req.params.id, userId);
 
     if (!todo) {
       return res.status(404).json({ error: 'ToDo not found' });
@@ -33,6 +35,7 @@ router.get('/:id', (req, res) => {
 // POST /api/todos - Create new todo
 router.post('/', (req, res) => {
   try {
+    const userId = req.session.userId;
     const { title, description, dueDate, linkedType, linkedId } = req.body;
 
     if (!title || !title.trim()) {
@@ -53,7 +56,7 @@ router.post('/', (req, res) => {
       dueDate,
       linkedType,
       linkedId
-    });
+    }, userId);
 
     res.status(201).json(newTodo);
   } catch (err) {
@@ -65,6 +68,7 @@ router.post('/', (req, res) => {
 // PUT /api/todos/:id - Update todo
 router.put('/:id', (req, res) => {
   try {
+    const userId = req.session.userId;
     const { title, description, dueDate, completed } = req.body;
 
     if (title !== undefined && !title.trim()) {
@@ -76,7 +80,7 @@ router.put('/:id', (req, res) => {
       description,
       dueDate,
       completed
-    });
+    }, userId);
 
     if (!updated) {
       return res.status(404).json({ error: 'ToDo not found' });
@@ -92,10 +96,14 @@ router.put('/:id', (req, res) => {
 // DELETE /api/todos/:id - Delete todo
 router.delete('/:id', (req, res) => {
   try {
-    const deleted = data.deleteTodo(req.params.id);
+    const userId = req.session.userId;
+    const result = data.deleteTodo(req.params.id, userId);
 
-    if (!deleted) {
-      return res.status(404).json({ error: 'ToDo not found' });
+    if (result.error) {
+      if (result.error === 'Todo not found') {
+        return res.status(404).json({ error: result.error });
+      }
+      return res.status(403).json({ error: result.error });
     }
 
     res.status(204).send();

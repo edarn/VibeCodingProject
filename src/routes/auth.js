@@ -49,10 +49,20 @@ router.post('/register', async (req, res) => {
     req.session.userId = user.id;
     req.session.username = user.username;
 
+    // Get role and team info
+    const role = data.getUserRole(user.id);
+    const team = data.getTeamByUserId(user.id);
+
+    // Check for pending invitations
+    const invitations = data.getInvitationsByEmail(user.email);
+
     res.status(201).json({
       id: user.id,
       username: user.username,
-      email: user.email
+      email: user.email,
+      role,
+      team,
+      hasPendingInvitations: invitations.length > 0
     });
   } catch (err) {
     console.error('Error registering user:', err);
@@ -87,10 +97,20 @@ router.post('/login', async (req, res) => {
     req.session.userId = user.id;
     req.session.username = user.username;
 
+    // Get role and team info
+    const role = data.getUserRole(user.id);
+    const team = data.getTeamByUserId(user.id);
+
+    // Check for pending invitations
+    const invitations = data.getInvitationsByEmail(user.email);
+
     res.json({
       id: user.id,
       username: user.username,
-      email: user.email
+      email: user.email,
+      role,
+      team,
+      hasPendingInvitations: invitations.length > 0
     });
   } catch (err) {
     console.error('Error logging in:', err);
@@ -123,10 +143,20 @@ router.get('/me', (req, res) => {
     return res.status(401).json({ error: 'User not found' });
   }
 
+  // Get role and team info
+  const role = data.getUserRole(user.id);
+  const team = data.getTeamByUserId(user.id);
+
+  // Check for pending invitations
+  const invitations = data.getInvitationsByEmail(user.email);
+
   res.json({
     id: user.id,
     username: user.username,
-    email: user.email
+    email: user.email,
+    role,
+    team,
+    hasPendingInvitations: invitations.length > 0
   });
 });
 
