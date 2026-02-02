@@ -2,13 +2,19 @@
 
 ## Overview
 
-A lightweight, locally-run CRM system for managing companies, contacts (persons at companies), and associated notes. Designed for personal use with easy data portability.
+A lightweight, multi-user CRM system for managing companies, contacts, job candidates, and associated notes/tasks. Designed for personal or small team use with cloud deployment support.
 
 ## Core Requirements
 
 ### Functional Requirements
 
-1. **Contact Management**
+1. **Authentication**
+   - User registration with username, email, password
+   - User login with session management
+   - Protected routes requiring authentication
+   - Logout functionality
+
+2. **Contact Management**
    - Main view: list of all contacts across all companies
    - Contact fields: name, role, department, description, email, phone
    - Add new contacts linked to a company
@@ -17,14 +23,23 @@ A lightweight, locally-run CRM system for managing companies, contacts (persons 
    - Search/filter contacts by name, company, or any field
    - Sort contact list by name, company, or last note date
 
-2. **Company Management**
-   - Add new companies with name and technologies
+3. **Company Management**
+   - Add new companies with name, organization number, address, and technologies
    - Edit existing companies
    - Delete companies (and associated contacts)
    - View list of all companies
    - View all contacts for a specific company
 
-3. **Notes & ToDos Management**
+4. **Candidate Management**
+   - Separate tab for managing job candidates (independent from contacts)
+   - Candidate fields: name, email, phone, role, skills
+   - Resume file upload (PDF, DOC, DOCX, max 10MB)
+   - Resume download functionality
+   - Comments system for candidate notes
+   - Full-text search across all candidate fields
+   - Sort candidates by name, role, or skills
+
+5. **Notes & ToDos Management**
    - Notes and ToDos are displayed in a unified "Notes & ToDos" list
    - Each item shows a type label: "Note" (blue) or "ToDo" (green)
    - List sortable by date (default, newest first) or by type
@@ -35,27 +50,28 @@ A lightweight, locally-run CRM system for managing companies, contacts (persons 
    - ToDos: actionable items with completion checkbox
    - Edit and delete functionality for both types
 
-4. **ToDo Management**
-   - ToDos view accessible from main navigation (Contacts | Companies | ToDos)
+6. **ToDo Management**
+   - ToDos view accessible from main navigation
    - Add ToDos linked to a Company or a Contact
    - ToDos can be added from:
      - The ToDos list view
      - Contact detail view (via "Make this a ToDo" checkbox)
      - Company detail view
-   - ToDo fields: title, description, dueDate, completed status, linked entity (contact or company)
+   - ToDo fields: title, description, dueDate, completed status, linked entity
    - Checkbox to mark ToDo as completed
    - Completed ToDos shown greyed out with strikethrough
    - View all ToDos in a central list with filters (All / Active / Completed)
 
-5. **Data Portability**
-   - All data stored in a single JSON file
-   - Easy to backup, copy, or transfer to another machine
-   - Human-readable format
+7. **Data Storage**
+   - SQLite database for structured data storage
+   - File system storage for uploaded resumes
+   - Support for persistent volumes on cloud platforms (Railway)
 
 ### Non-Functional Requirements
 
-- Runs entirely on local machine
-- Accessed via web browser (localhost:3000)
+- Multi-user support with authentication
+- Deployable to cloud platforms (Railway, Render)
+- Accessible via web browser
 - Light, modern user interface
 - Fast startup time
 - Minimal dependencies
@@ -66,120 +82,178 @@ A lightweight, locally-run CRM system for managing companies, contacts (persons 
 
 | Component | Technology | Rationale |
 |-----------|------------|-----------|
-| Runtime | Node.js | Widely available, excellent ecosystem |
-| Backend | Express.js | Simple, minimal, well-documented |
+| Runtime | Node.js 18+ | Widely available, excellent ecosystem |
+| Backend | Express.js 5 | Simple, minimal, well-documented |
+| Database | SQLite (better-sqlite3) | Lightweight, no separate server needed |
+| Sessions | express-session + connect-sqlite3 | Persistent sessions in SQLite |
+| File Upload | Multer | Standard multipart/form-data handling |
+| Authentication | bcryptjs | Secure password hashing |
 | Frontend | HTML + Vanilla JS | No build step, easy to modify |
 | Styling | Tailwind CSS (CDN) | Modern light theme, minimal effort |
-| Storage | JSON file (fs module) | Simple, portable, human-readable |
 
 ---
 
 ## Data Model
 
-### JSON Structure
+### Database Schema
 
-```json
-{
-  "version": "1.0",
-  "lastModified": "2024-01-15T10:30:00Z",
-  "companies": [
-    {
-      "id": "company-uuid",
-      "name": "Acme Corp",
-      "organizationNumber": "556123-4567",
-      "address": "Storgatan 1, 111 22 Stockholm",
-      "technologies": "Java, Spring Boot, PostgreSQL, AWS",
-      "createdAt": "2024-01-10T08:00:00Z",
-      "updatedAt": "2024-01-15T10:30:00Z",
-      "contacts": [
-        {
-          "id": "contact-uuid",
-          "name": "John Doe",
-          "role": "Tech Lead",
-          "department": "Engineering",
-          "description": "Works on backend services and API integrations",
-          "email": "john.doe@acme.com",
-          "phone": "+1 555-123-4567",
-          "createdAt": "2024-01-10T08:00:00Z",
-          "updatedAt": "2024-01-15T10:30:00Z",
-          "notes": [
-            {
-              "id": "note-uuid",
-              "content": "Met at conference, interested in product demo",
-              "createdAt": "2024-01-10T08:00:00Z",
-              "updatedAt": "2024-01-10T08:00:00Z"
-            }
-          ]
-        }
-      ]
-    }
-  ],
-  "todos": [
-    {
-      "id": "todo-uuid",
-      "title": "Schedule follow-up call with John",
-      "completed": false,
-      "linkedType": "contact",
-      "linkedId": "contact-uuid",
-      "createdAt": "2024-01-10T08:00:00Z",
-      "updatedAt": "2024-01-10T08:00:00Z",
-      "completedAt": null
-    }
-  ]
-}
+#### Users Table
+```sql
+CREATE TABLE users (
+  id TEXT PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+)
 ```
 
-### Company Fields
+#### Companies Table
+```sql
+CREATE TABLE companies (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  technologies TEXT DEFAULT '',
+  organization_number TEXT DEFAULT '',
+  address TEXT DEFAULT '',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+)
+```
 
+#### Contacts Table
+```sql
+CREATE TABLE contacts (
+  id TEXT PRIMARY KEY,
+  company_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  role TEXT DEFAULT '',
+  department TEXT DEFAULT '',
+  description TEXT DEFAULT '',
+  email TEXT DEFAULT '',
+  phone TEXT DEFAULT '',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
+)
+```
+
+#### Notes Table
+```sql
+CREATE TABLE notes (
+  id TEXT PRIMARY KEY,
+  contact_id TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
+)
+```
+
+#### ToDos Table
+```sql
+CREATE TABLE todos (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  due_date TEXT,
+  completed INTEGER DEFAULT 0,
+  completed_at TEXT,
+  linked_type TEXT NOT NULL CHECK (linked_type IN ('contact', 'company')),
+  linked_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+)
+```
+
+#### Candidates Table
+```sql
+CREATE TABLE candidates (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT DEFAULT '',
+  phone TEXT DEFAULT '',
+  role TEXT DEFAULT '',
+  skills TEXT DEFAULT '',
+  resume_filename TEXT DEFAULT '',
+  resume_original_name TEXT DEFAULT '',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+)
+```
+
+#### Candidate Comments Table
+```sql
+CREATE TABLE candidate_comments (
+  id TEXT PRIMARY KEY,
+  candidate_id TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE CASCADE
+)
+```
+
+### Field Descriptions
+
+#### User Fields
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| id | string (UUID) | Yes | Unique identifier |
-| name | string | Yes | Company name |
-| organizationNumber | string | No | Organization number (Organisationsnr) |
-| address | string | No | Company address |
-| technologies | string | No | Technical stacks used by the company |
-| createdAt | ISO datetime | Yes | When company was created |
-| updatedAt | ISO datetime | Yes | Last modification time |
-| contacts | array | Yes | Array of contact objects |
+| id | TEXT (UUID) | Yes | Unique identifier |
+| username | TEXT | Yes | Unique username for login |
+| email | TEXT | Yes | Unique email address |
+| password_hash | TEXT | Yes | Bcrypt hashed password |
+| created_at | TEXT (ISO) | Yes | When user was created |
+| updated_at | TEXT (ISO) | Yes | Last modification time |
 
-### Contact Fields
-
+#### Company Fields
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| id | string (UUID) | Yes | Unique identifier |
-| name | string | Yes | Contact's full name |
-| role | string | No | Job title/role at company |
-| department | string | No | Department within company |
-| description | string | No | What this contact/their team works with |
-| email | string | No | Email address |
-| phone | string | No | Phone number |
-| createdAt | ISO datetime | Yes | When contact was created |
-| updatedAt | ISO datetime | Yes | Last modification time |
-| notes | array | Yes | Array of note objects |
+| id | TEXT (UUID) | Yes | Unique identifier |
+| name | TEXT | Yes | Company name |
+| organization_number | TEXT | No | Organization number |
+| address | TEXT | No | Company address |
+| technologies | TEXT | No | Technical stacks used |
+| created_at | TEXT (ISO) | Yes | When company was created |
+| updated_at | TEXT (ISO) | Yes | Last modification time |
 
-### Note Fields
-
+#### Contact Fields
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| id | string (UUID) | Yes | Unique identifier |
-| content | string | Yes | Note text content |
-| createdAt | ISO datetime | Yes | When note was created |
-| updatedAt | ISO datetime | Yes | Last modification time |
+| id | TEXT (UUID) | Yes | Unique identifier |
+| company_id | TEXT | Yes | Foreign key to company |
+| name | TEXT | Yes | Contact's full name |
+| role | TEXT | No | Job title/role |
+| department | TEXT | No | Department within company |
+| description | TEXT | No | Additional information |
+| email | TEXT | No | Email address |
+| phone | TEXT | No | Phone number |
+| created_at | TEXT (ISO) | Yes | When contact was created |
+| updated_at | TEXT (ISO) | Yes | Last modification time |
 
-### ToDo Fields
-
+#### Candidate Fields
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| id | string (UUID) | Yes | Unique identifier |
-| title | string | Yes | ToDo title/task description |
-| description | string | No | Longer description of what needs to be done |
-| dueDate | ISO datetime | Yes | When the ToDo should be completed (defaults to current time) |
-| completed | boolean | Yes | Whether the ToDo is completed |
-| linkedType | string | Yes | Type of linked entity: "contact" or "company" |
-| linkedId | string | Yes | ID of the linked contact or company |
-| createdAt | ISO datetime | Yes | When ToDo was created |
-| updatedAt | ISO datetime | Yes | Last modification time |
-| completedAt | ISO datetime | No | When ToDo was marked complete |
+| id | TEXT (UUID) | Yes | Unique identifier |
+| name | TEXT | Yes | Candidate's full name |
+| email | TEXT | No | Email address |
+| phone | TEXT | No | Phone number |
+| role | TEXT | No | Target role/position |
+| skills | TEXT | No | Skills (comma-separated) |
+| resume_filename | TEXT | No | Stored filename on disk |
+| resume_original_name | TEXT | No | Original uploaded filename |
+| created_at | TEXT (ISO) | Yes | When candidate was created |
+| updated_at | TEXT (ISO) | Yes | Last modification time |
+
+#### Candidate Comment Fields
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| id | TEXT (UUID) | Yes | Unique identifier |
+| candidate_id | TEXT | Yes | Foreign key to candidate |
+| content | TEXT | Yes | Comment text |
+| created_at | TEXT (ISO) | Yes | When comment was created |
+| updated_at | TEXT (ISO) | Yes | Last modification time |
 
 ---
 
@@ -193,76 +267,67 @@ A lightweight, locally-run CRM system for managing companies, contacts (persons 
 - Good contrast for readability
 - Subtle shadows and rounded corners
 
+### Navigation
+
+Main navigation tabs: **Contacts | Companies | Candidates | ToDos**
+
 ### Pages/Views
 
-1. **Contact List (Home)**
-   - Default main view showing all contacts in the system
-   - Table columns: Contact Name, Company Name, Last Note Date
-   - Sortable by: name, company, or last note date
-   - Search box for filtering across all contacts
+1. **Login/Register**
+   - Login form: username, password
+   - Register form: username, email, password
+   - Toggle between login and register
+
+2. **Contact List (Default after login)**
+   - Table: Contact Name, Company Name, Last Note Date
+   - Sortable columns
+   - Search box for filtering
    - "Add Contact" button
-   - Click contact row to view details
+   - Click row to view details
 
-2. **Contact Detail**
-   - Contact information (name, role, department, description, email, phone)
-   - Company name (clickable link to company)
-   - Edit contact button
-   - Delete contact button
-   - Combined "Notes & ToDos" list with type labels
-   - Sort options: by date (default) or by type
-   - Add form with "Make this a ToDo" checkbox
-   - Back to contact list navigation
+3. **Contact Detail**
+   - Contact information display
+   - Company link
+   - Edit/Delete buttons
+   - Combined "Notes & ToDos" list
+   - Add note/todo form with checkbox
 
-3. **Company List**
-   - Secondary view accessible from navigation
-   - Table/list of all companies
-   - Shows company name, technologies, contact count
+4. **Company List**
+   - Table: Company Name, Technologies, Contact Count
    - "Add Company" button
-   - Click company to view details
+   - Click row to view details
 
-4. **Company Detail**
-   - Company information (name, organizationNumber, address, technologies)
-   - Edit company button
-   - Delete company button
-   - List of all contacts at this company
-   - "Add Contact" button (pre-selects this company)
-   - "Notes & ToDos" section for company-level ToDos
-   - Sort options: by date (default) or by type
-   - Back to company list navigation
+5. **Company Detail**
+   - Company information display
+   - Edit/Delete buttons
+   - List of contacts at company
+   - "Add Contact" button
+   - Company-level ToDos section
 
-5. **Add/Edit Contact**
-   - Form: name, role, department, description (textarea), email, phone
-   - Company selector (dropdown of existing companies)
-   - Save/Cancel buttons
+6. **Candidates List**
+   - Table: Name, Role, Skills, Resume status
+   - Sortable columns
+   - Full-text search across all fields
+   - "Add Candidate" button
+   - Click row to view details
 
-6. **Add/Edit Company**
-   - Form: name, organizationNumber, address, technologies
-   - Save/Cancel buttons
+7. **Candidate Detail**
+   - Candidate information display
+   - Resume download link (if uploaded)
+   - Edit/Delete buttons
+   - Comments section with add/edit/delete
 
-7. **ToDos List**
-   - Third navigation option (Contacts | Companies | ToDos)
-   - List of all ToDos across contacts and companies
-   - Shows: checkbox, title, linked entity name
-   - Filter: All / Active / Completed
+8. **Candidate Form (Add/Edit)**
+   - Fields: name, email, phone, role, skills
+   - File input for resume upload
+   - Shows current resume if editing
+
+9. **ToDos List**
+   - All ToDos across contacts and companies
+   - Filters: All / Active / Completed
+   - Checkbox to toggle completion
    - "Add ToDo" button
-   - Click ToDo to navigate to linked contact/company
-
-8. **Notes & ToDos in Contact/Company Detail**
-   - Notes and ToDos shown in unified list with type labels
-   - Sortable by date (newest first) or by type
-   - Notes: blue label, text content
-   - ToDos: green label, checkbox for completion, due date display
-   - Completed ToDos shown greyed out with strikethrough
-   - Add form with "Make this a ToDo" checkbox option
-
-### UI Principles
-
-- Clean, minimal design
-- Light modern theme with good whitespace
-- Responsive (works on different screen sizes)
-- No unnecessary animations or complexity
-- Clear visual hierarchy
-- Intuitive navigation breadcrumbs
+   - Click to navigate to linked entity
 
 ---
 
@@ -270,30 +335,49 @@ A lightweight, locally-run CRM system for managing companies, contacts (persons 
 
 ```
 VibeCodingProject/
-├── server.js           # Main application entry point
-├── package.json        # Dependencies and scripts
+├── server.js              # Main application entry point
+├── package.json           # Dependencies and scripts
+├── SPECIFICATION.md       # This file
 ├── data/
-│   └── crm.json        # Data storage file
+│   ├── crm.db             # SQLite database
+│   └── sessions.db        # Session storage
+├── uploads/               # Resume file storage
+│   └── .gitkeep
 ├── public/
-│   ├── index.html      # Main HTML file
-│   ├── style.css       # Custom styles (if needed)
-│   └── app.js          # Frontend JavaScript
+│   ├── index.html         # Main HTML file
+│   └── app.js             # Frontend JavaScript
 ├── src/
-│   ├── data.js         # Data layer (read/write JSON, helpers)
+│   ├── database.js        # Database initialization
+│   ├── data.js            # Data layer functions
+│   ├── middleware/
+│   │   └── auth.js        # Authentication middleware
 │   └── routes/
-│       ├── companies.js  # Company API routes
-│       ├── contacts.js   # Contact API routes
-│       ├── notes.js      # Notes API routes
-│       ├── search.js     # Search API routes
-│       └── todos.js      # ToDo API routes
-└── SPECIFICATION.md    # This file
+│       ├── auth.js        # Authentication routes
+│       ├── companies.js   # Company API routes
+│       ├── contacts.js    # Contact API routes
+│       ├── notes.js       # Notes API routes
+│       ├── search.js      # Search API routes
+│       ├── todos.js       # ToDo API routes
+│       └── candidates.js  # Candidate API routes
+└── scripts/
+    ├── migrate-json-to-sqlite.js  # Migration script
+    └── seed-test-data.js          # Test data seeder
 ```
 
 ---
 
 ## API Endpoints
 
-### Companies
+### Authentication
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/auth/register | Register new user |
+| POST | /api/auth/login | Login user |
+| POST | /api/auth/logout | Logout user |
+| GET | /api/auth/me | Get current user |
+
+### Companies (Protected)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -303,69 +387,110 @@ VibeCodingProject/
 | PUT | /api/companies/:id | Update company |
 | DELETE | /api/companies/:id | Delete company and all contacts |
 
-### Contacts
+### Contacts (Protected)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | /api/contacts | List all contacts (with company name, last note date) |
+| GET | /api/contacts | List all contacts |
 | GET | /api/contacts?sort=name\|company\|lastNote | Sort contacts |
 | GET | /api/contacts/:id | Get single contact with notes |
-| POST | /api/contacts | Create new contact (companyId in body) |
+| POST | /api/contacts | Create new contact |
 | PUT | /api/contacts/:id | Update contact |
 | DELETE | /api/contacts/:id | Delete contact |
 
-### Notes
+### Notes (Protected)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | /api/companies/:companyId/contacts/:contactId/notes | Add note to contact |
-| PUT | /api/companies/:companyId/contacts/:contactId/notes/:id | Update note |
-| DELETE | /api/companies/:companyId/contacts/:contactId/notes/:id | Delete note |
+| POST | /api/contacts/:contactId/notes | Add note to contact |
+| PUT | /api/contacts/:contactId/notes/:id | Update note |
+| DELETE | /api/contacts/:contactId/notes/:id | Delete note |
 
-### Search
+### ToDos (Protected)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/todos | List all ToDos |
+| GET | /api/todos?filter=active\|completed | Filter ToDos |
+| GET | /api/todos/:id | Get single ToDo |
+| POST | /api/todos | Create new ToDo |
+| PUT | /api/todos/:id | Update ToDo |
+| DELETE | /api/todos/:id | Delete ToDo |
+
+### Candidates (Protected)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/candidates | List all candidates |
+| GET | /api/candidates/:id | Get candidate with comments |
+| POST | /api/candidates | Create candidate (multipart/form-data) |
+| PUT | /api/candidates/:id | Update candidate (multipart/form-data) |
+| DELETE | /api/candidates/:id | Delete candidate |
+| GET | /api/candidates/:id/resume | Download resume file |
+| POST | /api/candidates/:id/comments | Add comment |
+| PUT | /api/candidates/:id/comments/:commentId | Update comment |
+| DELETE | /api/candidates/:id/comments/:commentId | Delete comment |
+
+### Search (Protected)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | /api/search?q=term | Search companies and contacts |
 
-### ToDos
+### Health Check
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | /api/todos | List all ToDos |
-| GET | /api/todos?filter=active\|completed | Filter ToDos by status |
-| GET | /api/todos/:id | Get single ToDo |
-| POST | /api/todos | Create new ToDo (linkedType, linkedId in body) |
-| PUT | /api/todos/:id | Update ToDo (title, completed) |
-| DELETE | /api/todos/:id | Delete ToDo |
+| GET | /api/health | Health check (no auth required) |
 
 ---
 
-## Future Enhancements (Out of Scope for V1)
+## Deployment
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| PORT | Server port | 3000 |
+| NODE_ENV | Environment (production/development) | development |
+| DATABASE_PATH | Path to SQLite database | ./data/crm.db |
+| SESSION_SECRET | Secret for session encryption | dev-secret-change-in-production |
+
+### Railway Deployment
+
+1. Connect GitHub repository to Railway
+2. Add a volume mounted at `/data`
+3. Set environment variables:
+   - `DATABASE_PATH=/data/crm.db`
+   - `SESSION_SECRET=<random-secure-string>`
+   - `NODE_ENV=production`
+4. Deploy
+
+Resume uploads are stored in the same volume directory (`/data/uploads`).
+
+---
+
+## Future Enhancements (Out of Scope)
 
 - [ ] Tags/categories for companies and contacts
 - [ ] Import/export to CSV
-- [ ] Multiple data files (workspaces)
 - [ ] Dark mode toggle
 - [ ] Contact photo/avatar
 - [ ] Activity timeline across all contacts
 - [ ] Favorite/pin important contacts
-- [ ] Company-level notes (currently only ToDos supported for companies)
+- [ ] Company-level notes
+- [ ] Candidate status tracking (pipeline stages)
+- [ ] Email integration
+- [ ] Calendar integration for ToDos
 
 ---
 
 ## Decisions Made
 
-- **Technology Stack:** Node.js + Express + Vanilla JS + Tailwind CSS
-- **Theme:** Light modern design
-- **Port:** 3000
-- **Main View:** Contact list (all contacts, sortable, searchable)
-- **Navigation:** Contacts | Companies | ToDos
-- **Contact Fields:** name, role, department, description, email, phone
-- **Company Fields:** name, organizationNumber, address, technologies
-- **List Columns:** Contact name, Company name, Last note date
-- **Sort Options:** By name, company, or last note date
-- **ToDos:** Linked to contacts or companies, with dueDate and description fields
-- **Notes & ToDos:** Combined in unified list view, sortable by date or type
-- **Add Note UX:** Checkbox option to "Make this a ToDo" when adding content
-- **Type Labels:** Notes (blue) and ToDos (green) visually distinguished
+- **Database:** SQLite for simplicity and portability
+- **Authentication:** Session-based with bcrypt password hashing
+- **File Storage:** Local filesystem with volume support for cloud
+- **Candidates:** Separate entity from Contacts (not linked to companies)
+- **Resume Upload:** PDF, DOC, DOCX up to 10MB
+- **Navigation:** Four main tabs - Contacts, Companies, Candidates, ToDos
+- **Search:** Client-side filtering for candidates, server-side for contacts/companies
