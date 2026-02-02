@@ -44,11 +44,11 @@ const auth = {
     const roleBadge = document.getElementById('user-role-badge');
     if (this.currentUser.role === 'owner') {
       roleBadge.textContent = 'Owner';
-      roleBadge.className = 'px-2 py-0.5 text-xs rounded-full mr-2 bg-purple-100 text-purple-800';
+      roleBadge.className = 'px-2.5 py-0.5 text-xs rounded-full mr-2 bg-amber-400/90 text-amber-900 font-medium';
       roleBadge.classList.remove('hidden');
     } else if (this.currentUser.role === 'member') {
       roleBadge.textContent = 'Member';
-      roleBadge.className = 'px-2 py-0.5 text-xs rounded-full mr-2 bg-green-100 text-green-800';
+      roleBadge.className = 'px-2.5 py-0.5 text-xs rounded-full mr-2 bg-emerald-400/90 text-emerald-900 font-medium';
       roleBadge.classList.remove('hidden');
     } else {
       roleBadge.classList.add('hidden');
@@ -97,32 +97,35 @@ const auth = {
 
     document.getElementById('auth-modal-content').innerHTML = `
       <div id="login-form">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Login</h2>
+        <div class="text-center mb-6">
+          <h2 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Welcome Back</h2>
+          <p class="text-slate-500 text-sm mt-1">Sign in to your account</p>
+        </div>
 
-        <div id="auth-error" class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded"></div>
+        <div id="auth-error" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm"></div>
 
         <form onsubmit="auth.login(event)">
           <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Username</label>
             <input type="text" id="login-username" required autocomplete="username"
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                   class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
           </div>
 
           <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
             <input type="password" id="login-password" required autocomplete="current-password"
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                   class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
           </div>
 
           <button type="submit"
-                  class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition font-medium">
-            Login
+                  class="w-full bg-gradient-to-r from-sky-600 to-blue-600 text-white py-2.5 px-4 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all font-medium shadow-sm">
+            Sign In
           </button>
         </form>
 
-        <p class="mt-4 text-center text-sm text-gray-600">
+        <p class="mt-5 text-center text-sm text-slate-600">
           Don't have an account?
-          <a href="#" onclick="auth.showRegisterForm(); return false;" class="text-blue-600 hover:text-blue-800">Register</a>
+          <a href="#" onclick="auth.showRegisterForm(); return false;" class="text-sky-600 hover:text-sky-700 font-medium">Create one</a>
         </p>
       </div>
     `;
@@ -131,38 +134,41 @@ const auth = {
   showRegisterForm() {
     document.getElementById('auth-modal-content').innerHTML = `
       <div id="register-form">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Register</h2>
+        <div class="text-center mb-6">
+          <h2 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Create Account</h2>
+          <p class="text-slate-500 text-sm mt-1">Get started with Simple CRM</p>
+        </div>
 
-        <div id="auth-error" class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded"></div>
+        <div id="auth-error" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm"></div>
 
         <form onsubmit="auth.register(event)">
           <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Username</label>
             <input type="text" id="register-username" required autocomplete="username"
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                   class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
           </div>
 
           <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
             <input type="email" id="register-email" required autocomplete="email"
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                   class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
           </div>
 
           <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Password (min 6 characters)</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Password (min 6 characters)</label>
             <input type="password" id="register-password" required minlength="6" autocomplete="new-password"
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                   class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
           </div>
 
           <button type="submit"
-                  class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition font-medium">
-            Register
+                  class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-2.5 px-4 rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all font-medium shadow-sm">
+            Create Account
           </button>
         </form>
 
-        <p class="mt-4 text-center text-sm text-gray-600">
+        <p class="mt-5 text-center text-sm text-slate-600">
           Already have an account?
-          <a href="#" onclick="auth.showLoginModal(); return false;" class="text-blue-600 hover:text-blue-800">Login</a>
+          <a href="#" onclick="auth.showLoginModal(); return false;" class="text-sky-600 hover:text-sky-700 font-medium">Sign in</a>
         </p>
       </div>
     `;
@@ -316,11 +322,11 @@ const router = {
           (route === 'candidates' && current?.startsWith('candidate')) ||
           (route === 'todos' && current?.startsWith('todo'));
       if (isActive) {
-        link.classList.add('bg-gray-100', 'text-gray-900');
-        link.classList.remove('text-gray-600');
+        link.classList.add('bg-white/25', 'text-white');
+        link.classList.remove('text-blue-100');
       } else {
-        link.classList.remove('bg-gray-100', 'text-gray-900');
-        link.classList.add('text-gray-600');
+        link.classList.remove('bg-white/25', 'text-white');
+        link.classList.add('text-blue-100');
       }
     });
   },
@@ -438,15 +444,15 @@ const teamManager = {
     if (this.hasSoloData) {
       mergeOption = `
         <div class="mb-4">
-          <p class="text-sm text-gray-600 mb-2">You have existing data. What would you like to do with it?</p>
+          <p class="text-sm text-slate-600 mb-2">You have existing data. What would you like to do with it?</p>
           <div class="space-y-2">
             <label class="flex items-center">
-              <input type="radio" name="merge-choice" value="merge" checked class="mr-2">
-              <span class="text-sm">Merge my data into the team</span>
+              <input type="radio" name="merge-choice" value="merge" checked class="mr-2 text-emerald-600 focus:ring-emerald-500">
+              <span class="text-sm text-slate-700">Merge my data into the team</span>
             </label>
             <label class="flex items-center">
-              <input type="radio" name="merge-choice" value="fresh" class="mr-2">
-              <span class="text-sm">Start fresh (my data will be deleted)</span>
+              <input type="radio" name="merge-choice" value="fresh" class="mr-2 text-emerald-600 focus:ring-emerald-500">
+              <span class="text-sm text-slate-700">Start fresh (my data will be deleted)</span>
             </label>
           </div>
         </div>
@@ -454,17 +460,17 @@ const teamManager = {
     }
 
     modal.show(`
-      <h3 class="text-lg font-semibold mb-4">Join Team</h3>
-      <p class="text-gray-600 mb-4">
-        You're about to join <strong>${this.pendingInvitation.inviterUsername}</strong>'s team.
+      <h3 class="text-lg font-semibold text-slate-800 mb-4">Join Team</h3>
+      <p class="text-slate-600 mb-4">
+        You're about to join <strong class="text-slate-800">${this.pendingInvitation.inviterUsername}</strong>'s team.
         You'll have access to all team data and can collaborate with other members.
       </p>
       ${mergeOption}
       <div class="flex justify-end space-x-2">
-        <button onclick="modal.hide()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+        <button onclick="modal.hide()" class="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium">
           Cancel
         </button>
-        <button onclick="teamManager.acceptInvitation()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        <button onclick="teamManager.acceptInvitation()" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 font-medium shadow-sm">
           Join Team
         </button>
       </div>
@@ -585,40 +591,40 @@ const views = {
     container.innerHTML = `
       <div class="mb-6 flex justify-between items-center">
         <div>
-          <h2 class="text-2xl font-bold text-gray-900">Contacts</h2>
-          <p class="text-gray-600">${contacts.length} contacts</p>
+          <h2 class="text-2xl font-bold text-slate-800">Contacts</h2>
+          <p class="text-slate-500">${contacts.length} contacts</p>
         </div>
         <button onclick="router.navigate('contact-form')"
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-          Add Contact
+                class="bg-gradient-to-r from-sky-600 to-blue-600 text-white px-5 py-2.5 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all font-medium shadow-sm">
+          + Add Contact
         </button>
       </div>
 
       <div class="mb-4">
         <input type="text" id="search-input" placeholder="Search contacts..."
-               class="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+               class="w-full md:w-96 px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors"
                oninput="views.filterContacts()">
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+      <div class="bg-white shadow-sm rounded-xl overflow-hidden border border-slate-200">
+        <table class="min-w-full divide-y divide-slate-200">
+          <thead class="bg-gradient-to-r from-slate-50 to-slate-100">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+              <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
                   onclick="views.sortContacts('name')">
-                Name <span id="sort-name" class="text-blue-600"></span>
+                Name <span id="sort-name" class="text-sky-600"></span>
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+              <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
                   onclick="views.sortContacts('company')">
                 Company <span id="sort-company"></span>
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+              <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
                   onclick="views.sortContacts('lastNote')">
                 Last Note <span id="sort-lastNote"></span>
               </th>
             </tr>
           </thead>
-          <tbody id="contacts-table" class="bg-white divide-y divide-gray-200">
+          <tbody id="contacts-table" class="bg-white divide-y divide-slate-100">
             ${this.renderContactRows(contacts)}
           </tbody>
         </table>
@@ -633,16 +639,16 @@ const views = {
 
   renderContactRows(contacts) {
     if (contacts.length === 0) {
-      return `<tr><td colspan="3" class="px-6 py-8 text-center text-gray-500">No contacts found</td></tr>`;
+      return `<tr><td colspan="3" class="px-6 py-8 text-center text-slate-500">No contacts found</td></tr>`;
     }
     return contacts.map(c => `
-      <tr class="hover:bg-gray-50 cursor-pointer" onclick="router.navigate('contact-detail', {id: '${c.id}'})">
+      <tr class="hover:bg-sky-50/50 cursor-pointer transition-colors" onclick="router.navigate('contact-detail', {id: '${c.id}'})">
         <td class="px-6 py-4 whitespace-nowrap">
-          <div class="font-medium text-gray-900">${this.escapeHtml(c.name)}</div>
-          ${c.role ? `<div class="text-sm text-gray-500">${this.escapeHtml(c.role)}</div>` : ''}
+          <div class="font-medium text-slate-800">${this.escapeHtml(c.name)}</div>
+          ${c.role ? `<div class="text-sm text-slate-500">${this.escapeHtml(c.role)}</div>` : ''}
         </td>
-        <td class="px-6 py-4 whitespace-nowrap text-gray-600">${this.escapeHtml(c.companyName || '-')}</td>
-        <td class="px-6 py-4 whitespace-nowrap text-gray-500">${formatDateTime(c.lastNoteDate)}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-slate-600">${this.escapeHtml(c.companyName || '-')}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-slate-500">${formatDateTime(c.lastNoteDate)}</td>
       </tr>
     `).join('');
   },
@@ -705,66 +711,66 @@ const views = {
 
     container.innerHTML = `
       <div class="mb-6">
-        <a href="#" onclick="router.navigate('contacts'); return false;" class="text-blue-600 hover:text-blue-800">
+        <a href="#" onclick="router.navigate('contacts'); return false;" class="text-sky-600 hover:text-sky-700 font-medium">
           ← Back to Contacts
         </a>
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
+      <div class="bg-white shadow-sm rounded-xl p-6 mb-6 border border-slate-200">
         <div class="flex justify-between items-start mb-4">
           <div>
-            <h2 class="text-2xl font-bold text-gray-900">${this.escapeHtml(contact.name)}</h2>
+            <h2 class="text-2xl font-bold text-slate-800">${this.escapeHtml(contact.name)}</h2>
             <a href="#" onclick="router.navigate('company-detail', {id: '${contact.companyId}'}); return false;"
-               class="text-blue-600 hover:text-blue-800">${this.escapeHtml(contact.companyName)}</a>
+               class="text-sky-600 hover:text-sky-700 font-medium">${this.escapeHtml(contact.companyName)}</a>
           </div>
           <div class="flex gap-2">
             <button onclick="router.navigate('contact-form', {id: '${contact.id}'})"
-                    class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
+                    class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors font-medium">
               Edit
             </button>
             <button onclick="views.deleteContact('${contact.id}')"
-                    class="bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200 transition">
+                    class="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors font-medium">
               Delete
             </button>
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4 text-sm">
-          ${contact.role ? `<div><span class="text-gray-500">Role:</span> ${this.escapeHtml(contact.role)}</div>` : ''}
-          ${contact.department ? `<div><span class="text-gray-500">Department:</span> ${this.escapeHtml(contact.department)}</div>` : ''}
-          ${contact.email ? `<div><span class="text-gray-500">Email:</span> <a href="mailto:${this.escapeHtml(contact.email)}" class="text-blue-600">${this.escapeHtml(contact.email)}</a></div>` : ''}
-          ${contact.phone ? `<div><span class="text-gray-500">Phone:</span> ${this.escapeHtml(contact.phone)}</div>` : ''}
+          ${contact.role ? `<div><span class="text-slate-500">Role:</span> <span class="text-slate-700">${this.escapeHtml(contact.role)}</span></div>` : ''}
+          ${contact.department ? `<div><span class="text-slate-500">Department:</span> <span class="text-slate-700">${this.escapeHtml(contact.department)}</span></div>` : ''}
+          ${contact.email ? `<div><span class="text-slate-500">Email:</span> <a href="mailto:${this.escapeHtml(contact.email)}" class="text-sky-600 hover:text-sky-700">${this.escapeHtml(contact.email)}</a></div>` : ''}
+          ${contact.phone ? `<div><span class="text-slate-500">Phone:</span> <span class="text-slate-700">${this.escapeHtml(contact.phone)}</span></div>` : ''}
         </div>
 
         ${contact.description ? `
-          <div class="mt-4 pt-4 border-t border-gray-200">
-            <h3 class="text-sm font-medium text-gray-500 mb-2">Description</h3>
-            <p class="text-gray-700">${this.escapeHtml(contact.description)}</p>
+          <div class="mt-4 pt-4 border-t border-slate-200">
+            <h3 class="text-sm font-medium text-slate-500 mb-2">Description</h3>
+            <p class="text-slate-700">${this.escapeHtml(contact.description)}</p>
           </div>
         ` : ''}
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Notes & ToDos</h3>
+      <div class="bg-white shadow-sm rounded-xl p-6 border border-slate-200">
+        <h3 class="text-lg font-semibold text-slate-800 mb-4">Notes & ToDos</h3>
 
         <form onsubmit="views.addNote(event, '${contact.id}')" class="mb-6">
           <textarea id="new-note" rows="3" placeholder="Add a note..."
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                    class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors"></textarea>
           <div class="mt-2 flex items-center gap-4">
-            <label class="flex items-center gap-2 text-sm text-gray-600">
-              <input type="checkbox" id="make-todo" class="h-4 w-4 text-blue-600 rounded border-gray-300">
+            <label class="flex items-center gap-2 text-sm text-slate-600">
+              <input type="checkbox" id="make-todo" class="h-4 w-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500">
               Make this a ToDo
             </label>
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+            <button type="submit" class="bg-gradient-to-r from-sky-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all font-medium shadow-sm">
               Add
             </button>
           </div>
         </form>
 
         <div class="mb-3 flex gap-2 text-sm">
-          <span class="text-gray-500">Sort by:</span>
-          <button onclick="views.sortActivity('date')" class="activity-sort text-blue-600 font-medium" data-sort="date">Date <span id="sort-activity-date">↓</span></button>
-          <button onclick="views.sortActivity('type')" class="activity-sort text-gray-600 hover:text-gray-800" data-sort="type">Type <span id="sort-activity-type"></span></button>
+          <span class="text-slate-500">Sort by:</span>
+          <button onclick="views.sortActivity('date')" class="activity-sort text-sky-600 font-medium" data-sort="date">Date <span id="sort-activity-date">↓</span></button>
+          <button onclick="views.sortActivity('type')" class="activity-sort text-slate-600 hover:text-slate-800" data-sort="type">Type <span id="sort-activity-type"></span></button>
         </div>
 
         <div id="activity-list" class="space-y-4">
@@ -781,22 +787,22 @@ const views = {
 
   renderNotes(notes, contactId) {
     if (!notes || notes.length === 0) {
-      return '<p class="text-gray-500">No notes yet</p>';
+      return '<p class="text-slate-500">No notes yet</p>';
     }
 
     // Sort notes by date, newest first
     const sorted = [...notes].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     return sorted.map(note => `
-      <div class="border-l-4 border-blue-200 pl-4 py-2" data-note-id="${note.id}">
+      <div class="border-l-4 border-sky-300 pl-4 py-2 bg-sky-50/30 rounded-r-lg" data-note-id="${note.id}">
         <div class="flex justify-between items-start">
-          <p class="text-gray-700 whitespace-pre-wrap">${this.escapeHtml(note.content)}</p>
+          <p class="text-slate-700 whitespace-pre-wrap">${this.escapeHtml(note.content)}</p>
           <div class="flex gap-2 ml-4">
-            <button onclick="views.editNote('${contactId}', '${note.id}')" class="text-gray-400 hover:text-gray-600">Edit</button>
-            <button onclick="views.deleteNote('${contactId}', '${note.id}')" class="text-red-400 hover:text-red-600">Delete</button>
+            <button onclick="views.editNote('${contactId}', '${note.id}')" class="text-slate-400 hover:text-slate-600 text-sm">Edit</button>
+            <button onclick="views.deleteNote('${contactId}', '${note.id}')" class="text-red-400 hover:text-red-600 text-sm">Delete</button>
           </div>
         </div>
-        <p class="text-xs text-gray-400 mt-1">${formatDateTime(note.createdAt)}</p>
+        <p class="text-xs text-slate-400 mt-1">${formatDateTime(note.createdAt)}</p>
       </div>
     `).join('');
   },
@@ -849,37 +855,37 @@ const views = {
     return items.map(item => {
       if (item.type === 'note') {
         return `
-          <div class="border-l-4 border-blue-200 pl-4 py-2" data-note-id="${item.id}">
+          <div class="border-l-4 border-sky-300 pl-4 py-2 bg-sky-50/30 rounded-r-lg" data-note-id="${item.id}">
             <div class="flex justify-between items-start">
               <div class="flex-1">
-                <span class="inline-block px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700 mb-1">Note</span>
-                <p class="text-gray-700 whitespace-pre-wrap">${this.escapeHtml(item.content)}</p>
+                <span class="inline-block px-2 py-0.5 text-xs rounded-full bg-sky-100 text-sky-700 font-medium mb-1">Note</span>
+                <p class="text-slate-700 whitespace-pre-wrap">${this.escapeHtml(item.content)}</p>
               </div>
               <div class="flex gap-2 ml-4">
-                <button onclick="views.editNote('${entityId}', '${item.id}')" class="text-gray-400 hover:text-gray-600 text-sm">Edit</button>
+                <button onclick="views.editNote('${entityId}', '${item.id}')" class="text-slate-400 hover:text-slate-600 text-sm">Edit</button>
                 <button onclick="views.deleteNote('${entityId}', '${item.id}')" class="text-red-400 hover:text-red-600 text-sm">Delete</button>
               </div>
             </div>
-            <p class="text-xs text-gray-400 mt-1">${formatDateTime(item.createdAt)}</p>
+            <p class="text-xs text-slate-400 mt-1">${formatDateTime(item.createdAt)}</p>
           </div>
         `;
       } else {
         return `
-          <div class="border-l-4 ${item.completed ? 'border-gray-300' : 'border-green-300'} pl-4 py-2 ${item.completed ? 'opacity-50' : ''}" data-todo-id="${item.id}">
+          <div class="border-l-4 ${item.completed ? 'border-slate-300 bg-slate-50/50' : 'border-emerald-400 bg-emerald-50/30'} pl-4 py-2 rounded-r-lg ${item.completed ? 'opacity-60' : ''}" data-todo-id="${item.id}">
             <div class="flex justify-between items-start">
               <div class="flex items-start flex-1">
                 <input type="checkbox" ${item.completed ? 'checked' : ''}
                        onchange="views.toggleTodoInline('${item.id}', this.checked, '${entityType}', '${entityId}')"
-                       class="h-4 w-4 mt-1 text-green-600 rounded border-gray-300 cursor-pointer">
+                       class="h-4 w-4 mt-1 text-emerald-600 rounded border-slate-300 cursor-pointer focus:ring-emerald-500">
                 <div class="ml-2">
-                  <span class="inline-block px-2 py-0.5 text-xs rounded bg-green-100 text-green-700 mb-1">ToDo</span>
-                  <p class="text-gray-700 ${item.completed ? 'line-through' : ''}">${this.escapeHtml(item.content)}</p>
-                  ${item.description ? `<p class="text-sm text-gray-500 mt-1">${this.escapeHtml(item.description)}</p>` : ''}
-                  <p class="text-xs text-gray-400 mt-1">Due: ${formatDateTime(item.dueDate)} | Created: ${formatDateTime(item.createdAt)}</p>
+                  <span class="inline-block px-2 py-0.5 text-xs rounded-full ${item.completed ? 'bg-slate-200 text-slate-600' : 'bg-emerald-100 text-emerald-700'} font-medium mb-1">ToDo</span>
+                  <p class="text-slate-700 ${item.completed ? 'line-through' : ''}">${this.escapeHtml(item.content)}</p>
+                  ${item.description ? `<p class="text-sm text-slate-500 mt-1">${this.escapeHtml(item.description)}</p>` : ''}
+                  <p class="text-xs text-slate-400 mt-1">Due: ${formatDateTime(item.dueDate)} | Created: ${formatDateTime(item.createdAt)}</p>
                 </div>
               </div>
               <div class="flex gap-2 ml-4">
-                <button onclick="views.editTodoInline('${item.id}', '${entityType}', '${entityId}')" class="text-gray-400 hover:text-gray-600 text-sm">Edit</button>
+                <button onclick="views.editTodoInline('${item.id}', '${entityType}', '${entityId}')" class="text-slate-400 hover:text-slate-600 text-sm">Edit</button>
                 <button onclick="views.deleteTodoInline('${item.id}', '${entityType}', '${entityId}')" class="text-red-400 hover:text-red-600 text-sm">Delete</button>
               </div>
             </div>
@@ -902,12 +908,12 @@ const views = {
       const sortField = btn.dataset.sort;
       const indicator = document.getElementById(`sort-activity-${sortField}`);
       if (sortField === field) {
-        btn.classList.remove('text-gray-600');
-        btn.classList.add('text-blue-600', 'font-medium');
+        btn.classList.remove('text-slate-600');
+        btn.classList.add('text-sky-600', 'font-medium');
         indicator.textContent = this._activitySortAsc ? '↑' : '↓';
       } else {
-        btn.classList.remove('text-blue-600', 'font-medium');
-        btn.classList.add('text-gray-600');
+        btn.classList.remove('text-sky-600', 'font-medium');
+        btn.classList.add('text-slate-600');
         indicator.textContent = '';
       }
     });
@@ -949,11 +955,11 @@ const views = {
     if (!note) return;
 
     modal.show(`
-      <h3 class="text-lg font-semibold mb-4">Edit Note</h3>
-      <textarea id="edit-note-content" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg">${this.escapeHtml(note.content)}</textarea>
+      <h3 class="text-lg font-semibold text-slate-800 mb-4">Edit Note</h3>
+      <textarea id="edit-note-content" rows="4" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">${this.escapeHtml(note.content)}</textarea>
       <div class="flex justify-end gap-2 mt-4">
-        <button onclick="modal.hide()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-        <button onclick="views.saveNote('${contactId}', '${noteId}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Save</button>
+        <button onclick="modal.hide()" class="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium">Cancel</button>
+        <button onclick="views.saveNote('${contactId}', '${noteId}')" class="bg-gradient-to-r from-sky-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-sky-700 hover:to-blue-700 font-medium shadow-sm">Save</button>
       </div>
     `);
   },
@@ -990,72 +996,72 @@ const views = {
 
     container.innerHTML = `
       <div class="mb-6">
-        <a href="#" onclick="router.navigate('contacts'); return false;" class="text-blue-600 hover:text-blue-800">
+        <a href="#" onclick="router.navigate('contacts'); return false;" class="text-sky-600 hover:text-sky-700 font-medium">
           ← Back to Contacts
         </a>
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg p-6">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">${id ? 'Edit Contact' : 'New Contact'}</h2>
+      <div class="bg-white shadow-sm rounded-xl p-6 border border-slate-200">
+        <h2 class="text-2xl font-bold text-slate-800 mb-6">${id ? 'Edit Contact' : 'New Contact'}</h2>
 
         <form onsubmit="views.saveContact(event, '${id || ''}')" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Name *</label>
             <input type="text" id="contact-name" value="${this.escapeHtml(contact.name)}" required
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                   class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Company *</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Company *</label>
             <select id="contact-company" onchange="views.toggleNewCompany()"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
               <option value="">Select a company</option>
               <option value="__new__">+ Add new company...</option>
               ${companies.map(c => `<option value="${c.id}" ${c.id === contact.companyId ? 'selected' : ''}>${this.escapeHtml(c.name)}</option>`).join('')}
             </select>
             <div id="new-company-field" class="hidden mt-2">
               <input type="text" id="new-company-name" placeholder="Enter new company name"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                     class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Role</label>
               <input type="text" id="contact-role" value="${this.escapeHtml(contact.role || '')}"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                     class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Department</label>
               <input type="text" id="contact-department" value="${this.escapeHtml(contact.department || '')}"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                     class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Description</label>
             <textarea id="contact-description" rows="3"
-                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">${this.escapeHtml(contact.description || '')}</textarea>
+                      class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">${this.escapeHtml(contact.description || '')}</textarea>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
               <input type="email" id="contact-email" value="${this.escapeHtml(contact.email || '')}"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                     class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Phone</label>
               <input type="tel" id="contact-phone" value="${this.escapeHtml(contact.phone || '')}"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                     class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
             </div>
           </div>
 
           <div class="flex justify-end gap-4 pt-4">
             <button type="button" onclick="router.navigate('contacts')"
-                    class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                    class="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium">Cancel</button>
             <button type="submit"
-                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">Save</button>
+                    class="bg-gradient-to-r from-sky-600 to-blue-600 text-white px-6 py-2 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all font-medium shadow-sm">Save</button>
           </div>
         </form>
       </div>
@@ -1121,32 +1127,32 @@ const views = {
     container.innerHTML = `
       <div class="mb-6 flex justify-between items-center">
         <div>
-          <h2 class="text-2xl font-bold text-gray-900">Companies</h2>
-          <p class="text-gray-600">${companies.length} companies</p>
+          <h2 class="text-2xl font-bold text-slate-800">Companies</h2>
+          <p class="text-slate-500">${companies.length} companies</p>
         </div>
         <button onclick="router.navigate('company-form')"
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-          Add Company
+                class="bg-gradient-to-r from-violet-600 to-purple-600 text-white px-5 py-2.5 rounded-lg hover:from-violet-700 hover:to-purple-700 transition-all font-medium shadow-sm">
+          + Add Company
         </button>
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+      <div class="bg-white shadow-sm rounded-xl overflow-hidden border border-slate-200">
+        <table class="min-w-full divide-y divide-slate-200">
+          <thead class="bg-gradient-to-r from-slate-50 to-slate-100">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Technologies</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contacts</th>
+              <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Name</th>
+              <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Technologies</th>
+              <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Contacts</th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
+          <tbody class="bg-white divide-y divide-slate-100">
             ${companies.length === 0 ? `
-              <tr><td colspan="3" class="px-6 py-8 text-center text-gray-500">No companies yet</td></tr>
+              <tr><td colspan="3" class="px-6 py-8 text-center text-slate-500">No companies yet</td></tr>
             ` : companies.map(c => `
-              <tr class="hover:bg-gray-50 cursor-pointer" onclick="router.navigate('company-detail', {id: '${c.id}'})">
-                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${this.escapeHtml(c.name)}</td>
-                <td class="px-6 py-4 text-gray-600">${this.escapeHtml(c.technologies || '-')}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-gray-500">${c.contactCount}</td>
+              <tr class="hover:bg-violet-50/50 cursor-pointer transition-colors" onclick="router.navigate('company-detail', {id: '${c.id}'})">
+                <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-800">${this.escapeHtml(c.name)}</td>
+                <td class="px-6 py-4 text-slate-600">${this.escapeHtml(c.technologies || '-')}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-slate-500">${c.contactCount}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -1165,83 +1171,83 @@ const views = {
 
     container.innerHTML = `
       <div class="mb-6">
-        <a href="#" onclick="router.navigate('companies'); return false;" class="text-blue-600 hover:text-blue-800">
+        <a href="#" onclick="router.navigate('companies'); return false;" class="text-violet-600 hover:text-violet-700 font-medium">
           ← Back to Companies
         </a>
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
+      <div class="bg-white shadow-sm rounded-xl p-6 mb-6 border border-slate-200">
         <div class="flex justify-between items-start mb-4">
           <div>
-            <h2 class="text-2xl font-bold text-gray-900">${this.escapeHtml(company.name)}</h2>
-            ${company.technologies ? `<p class="text-gray-600 mt-1">${this.escapeHtml(company.technologies)}</p>` : ''}
+            <h2 class="text-2xl font-bold text-slate-800">${this.escapeHtml(company.name)}</h2>
+            ${company.technologies ? `<p class="text-slate-600 mt-1">${this.escapeHtml(company.technologies)}</p>` : ''}
           </div>
           <div class="flex gap-2">
             <button onclick="router.navigate('company-form', {id: '${company.id}'})"
-                    class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
+                    class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors font-medium">
               Edit
             </button>
             <button onclick="views.deleteCompany('${company.id}')"
-                    class="bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200 transition">
+                    class="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors font-medium">
               Delete
             </button>
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4 text-sm">
-          ${company.organizationNumber ? `<div><span class="text-gray-500">Org.nr:</span> ${this.escapeHtml(company.organizationNumber)}</div>` : ''}
-          ${company.address ? `<div><span class="text-gray-500">Adress:</span> ${this.escapeHtml(company.address)}</div>` : ''}
+          ${company.organizationNumber ? `<div><span class="text-slate-500">Org.nr:</span> <span class="text-slate-700">${this.escapeHtml(company.organizationNumber)}</span></div>` : ''}
+          ${company.address ? `<div><span class="text-slate-500">Adress:</span> <span class="text-slate-700">${this.escapeHtml(company.address)}</span></div>` : ''}
         </div>
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
+      <div class="bg-white shadow-sm rounded-xl p-6 mb-6 border border-slate-200">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Contacts (${company.contacts.length})</h3>
+          <h3 class="text-lg font-semibold text-slate-800">Contacts (${company.contacts.length})</h3>
           <button onclick="router.navigate('contact-form', {companyId: '${company.id}'})"
-                  class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-            Add Contact
+                  class="bg-gradient-to-r from-sky-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all font-medium shadow-sm">
+            + Add Contact
           </button>
         </div>
 
         ${company.contacts.length === 0 ? `
-          <p class="text-gray-500">No contacts at this company</p>
+          <p class="text-slate-500">No contacts at this company</p>
         ` : `
           <div class="space-y-3">
             ${company.contacts.map(c => `
-              <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+              <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg hover:bg-sky-50 cursor-pointer transition-colors border border-slate-100"
                    onclick="router.navigate('contact-detail', {id: '${c.id}'})">
                 <div>
-                  <div class="font-medium text-gray-900">${this.escapeHtml(c.name)}</div>
-                  ${c.role ? `<div class="text-sm text-gray-500">${this.escapeHtml(c.role)}</div>` : ''}
+                  <div class="font-medium text-slate-800">${this.escapeHtml(c.name)}</div>
+                  ${c.role ? `<div class="text-sm text-slate-500">${this.escapeHtml(c.role)}</div>` : ''}
                 </div>
-                <span class="text-gray-400">→</span>
+                <span class="text-slate-400">→</span>
               </div>
             `).join('')}
           </div>
         `}
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Notes & ToDos</h3>
+      <div class="bg-white shadow-sm rounded-xl p-6 border border-slate-200">
+        <h3 class="text-lg font-semibold text-slate-800 mb-4">Notes & ToDos</h3>
 
         <form onsubmit="views.addCompanyTodo(event, '${company.id}')" class="mb-6">
           <textarea id="company-new-note" rows="3" placeholder="Add a note or ToDo..."
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                    class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-colors"></textarea>
           <div class="mt-2 flex items-center gap-4">
-            <label class="flex items-center gap-2 text-sm text-gray-600">
-              <input type="checkbox" id="company-make-todo" class="h-4 w-4 text-blue-600 rounded border-gray-300" checked>
+            <label class="flex items-center gap-2 text-sm text-slate-600">
+              <input type="checkbox" id="company-make-todo" class="h-4 w-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" checked>
               Make this a ToDo
             </label>
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+            <button type="submit" class="bg-gradient-to-r from-violet-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-violet-700 hover:to-purple-700 transition-all font-medium shadow-sm">
               Add
             </button>
           </div>
         </form>
 
         <div class="mb-3 flex gap-2 text-sm">
-          <span class="text-gray-500">Sort by:</span>
-          <button onclick="views.sortCompanyActivity('date')" class="company-activity-sort text-blue-600 font-medium" data-sort="date">Date <span id="sort-company-activity-date">↓</span></button>
-          <button onclick="views.sortCompanyActivity('type')" class="company-activity-sort text-gray-600 hover:text-gray-800" data-sort="type">Type <span id="sort-company-activity-type"></span></button>
+          <span class="text-slate-500">Sort by:</span>
+          <button onclick="views.sortCompanyActivity('date')" class="company-activity-sort text-violet-600 font-medium" data-sort="date">Date <span id="sort-company-activity-date">↓</span></button>
+          <button onclick="views.sortCompanyActivity('type')" class="company-activity-sort text-slate-600 hover:text-slate-800" data-sort="type">Type <span id="sort-company-activity-type"></span></button>
         </div>
 
         <div id="company-activity-list" class="space-y-4">
@@ -1275,7 +1281,7 @@ const views = {
     }));
 
     if (items.length === 0) {
-      return '<p class="text-gray-500">No ToDos yet</p>';
+      return '<p class="text-slate-500">No ToDos yet</p>';
     }
 
     // Sort based on current sort setting
@@ -1293,21 +1299,21 @@ const views = {
     });
 
     return items.map(item => `
-      <div class="border-l-4 ${item.completed ? 'border-gray-300' : 'border-green-300'} pl-4 py-2 ${item.completed ? 'opacity-50' : ''}" data-todo-id="${item.id}">
+      <div class="border-l-4 ${item.completed ? 'border-slate-300 bg-slate-50/50' : 'border-emerald-400 bg-emerald-50/30'} pl-4 py-2 rounded-r-lg ${item.completed ? 'opacity-60' : ''}" data-todo-id="${item.id}">
         <div class="flex justify-between items-start">
           <div class="flex items-start flex-1">
             <input type="checkbox" ${item.completed ? 'checked' : ''}
                    onchange="views.toggleTodoInline('${item.id}', this.checked, 'company', '${companyId}')"
-                   class="h-4 w-4 mt-1 text-green-600 rounded border-gray-300 cursor-pointer">
+                   class="h-4 w-4 mt-1 text-emerald-600 rounded border-slate-300 cursor-pointer focus:ring-emerald-500">
             <div class="ml-2">
-              <span class="inline-block px-2 py-0.5 text-xs rounded bg-green-100 text-green-700 mb-1">ToDo</span>
-              <p class="text-gray-700 ${item.completed ? 'line-through' : ''}">${this.escapeHtml(item.content)}</p>
-              ${item.description ? `<p class="text-sm text-gray-500 mt-1">${this.escapeHtml(item.description)}</p>` : ''}
-              <p class="text-xs text-gray-400 mt-1">Due: ${formatDateTime(item.dueDate)} | Created: ${formatDateTime(item.createdAt)}</p>
+              <span class="inline-block px-2 py-0.5 text-xs rounded-full ${item.completed ? 'bg-slate-200 text-slate-600' : 'bg-emerald-100 text-emerald-700'} font-medium mb-1">ToDo</span>
+              <p class="text-slate-700 ${item.completed ? 'line-through' : ''}">${this.escapeHtml(item.content)}</p>
+              ${item.description ? `<p class="text-sm text-slate-500 mt-1">${this.escapeHtml(item.description)}</p>` : ''}
+              <p class="text-xs text-slate-400 mt-1">Due: ${formatDateTime(item.dueDate)} | Created: ${formatDateTime(item.createdAt)}</p>
             </div>
           </div>
           <div class="flex gap-2 ml-4">
-            <button onclick="views.editTodoInline('${item.id}', 'company', '${companyId}')" class="text-gray-400 hover:text-gray-600 text-sm">Edit</button>
+            <button onclick="views.editTodoInline('${item.id}', 'company', '${companyId}')" class="text-slate-400 hover:text-slate-600 text-sm">Edit</button>
             <button onclick="views.deleteTodoInline('${item.id}', 'company', '${companyId}')" class="text-red-400 hover:text-red-600 text-sm">Delete</button>
           </div>
         </div>
@@ -1328,12 +1334,12 @@ const views = {
       const sortField = btn.dataset.sort;
       const indicator = document.getElementById(`sort-company-activity-${sortField}`);
       if (sortField === field) {
-        btn.classList.remove('text-gray-600');
-        btn.classList.add('text-blue-600', 'font-medium');
+        btn.classList.remove('text-slate-600');
+        btn.classList.add('text-violet-600', 'font-medium');
         indicator.textContent = this._companyActivitySortAsc ? '↑' : '↓';
       } else {
-        btn.classList.remove('text-blue-600', 'font-medium');
-        btn.classList.add('text-gray-600');
+        btn.classList.remove('text-violet-600', 'font-medium');
+        btn.classList.add('text-slate-600');
         indicator.textContent = '';
       }
     });
@@ -1377,46 +1383,46 @@ const views = {
 
     container.innerHTML = `
       <div class="mb-6">
-        <a href="#" onclick="router.navigate('companies'); return false;" class="text-blue-600 hover:text-blue-800">
+        <a href="#" onclick="router.navigate('companies'); return false;" class="text-violet-600 hover:text-violet-700 font-medium">
           ← Back to Companies
         </a>
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg p-6">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">${id ? 'Edit Company' : 'New Company'}</h2>
+      <div class="bg-white shadow-sm rounded-xl p-6 border border-slate-200">
+        <h2 class="text-2xl font-bold text-slate-800 mb-6">${id ? 'Edit Company' : 'New Company'}</h2>
 
         <form onsubmit="views.saveCompany(event, '${id || ''}')" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Name *</label>
             <input type="text" id="company-name" value="${this.escapeHtml(company.name)}" required
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                   class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-colors">
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Organisationsnr</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Organisationsnr</label>
               <input type="text" id="company-orgnum" value="${this.escapeHtml(company.organizationNumber || '')}"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                     class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-colors">
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Adress</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Adress</label>
               <input type="text" id="company-address" value="${this.escapeHtml(company.address || '')}"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                     class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-colors">
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Technologies</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Technologies</label>
             <input type="text" id="company-technologies" value="${this.escapeHtml(company.technologies || '')}"
                    placeholder="e.g., React, Node.js, PostgreSQL"
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                   class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-colors">
           </div>
 
           <div class="flex justify-end gap-4 pt-4">
             <button type="button" onclick="router.navigate('companies')"
-                    class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                    class="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium">Cancel</button>
             <button type="submit"
-                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">Save</button>
+                    class="bg-gradient-to-r from-violet-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:from-violet-700 hover:to-purple-700 transition-all font-medium shadow-sm">Save</button>
           </div>
         </form>
       </div>
@@ -1449,23 +1455,23 @@ const views = {
     container.innerHTML = `
       <div class="mb-6 flex justify-between items-center">
         <div>
-          <h2 class="text-2xl font-bold text-gray-900">ToDos</h2>
-          <p class="text-gray-600">${todos.filter(t => !t.completed).length} active, ${todos.filter(t => t.completed).length} completed</p>
+          <h2 class="text-2xl font-bold text-slate-800">ToDos</h2>
+          <p class="text-slate-500">${todos.filter(t => !t.completed).length} active, ${todos.filter(t => t.completed).length} completed</p>
         </div>
         <button onclick="views.showAddTodoModal()"
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-          Add ToDo
+                class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-2.5 rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all font-medium shadow-sm">
+          + Add ToDo
         </button>
       </div>
 
       <div class="mb-4 flex gap-2">
-        <button onclick="views.filterTodos('all')" class="todo-filter px-3 py-1 rounded-lg bg-blue-100 text-blue-700" data-filter="all">All</button>
-        <button onclick="views.filterTodos('active')" class="todo-filter px-3 py-1 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="active">Active</button>
-        <button onclick="views.filterTodos('completed')" class="todo-filter px-3 py-1 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="completed">Completed</button>
+        <button onclick="views.filterTodos('all')" class="todo-filter px-4 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 font-medium transition-colors" data-filter="all">All</button>
+        <button onclick="views.filterTodos('active')" class="todo-filter px-4 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium transition-colors" data-filter="active">Active</button>
+        <button onclick="views.filterTodos('completed')" class="todo-filter px-4 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium transition-colors" data-filter="completed">Completed</button>
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg overflow-hidden">
-        <div id="todos-list" class="divide-y divide-gray-200">
+      <div class="bg-white shadow-sm rounded-xl overflow-hidden border border-slate-200">
+        <div id="todos-list" class="divide-y divide-slate-100">
           ${this.renderTodoRows(todos)}
         </div>
       </div>
@@ -1477,24 +1483,24 @@ const views = {
 
   renderTodoRows(todos) {
     if (todos.length === 0) {
-      return `<div class="px-6 py-8 text-center text-gray-500">No ToDos found</div>`;
+      return `<div class="px-6 py-8 text-center text-slate-500">No ToDos found</div>`;
     }
     return todos.map(t => `
-      <div class="flex items-start px-6 py-4 ${t.completed ? 'bg-gray-50' : ''}" data-todo-id="${t.id}">
+      <div class="flex items-start px-6 py-4 ${t.completed ? 'bg-slate-50' : 'hover:bg-emerald-50/30'} transition-colors" data-todo-id="${t.id}">
         <input type="checkbox" ${t.completed ? 'checked' : ''}
                onchange="views.toggleTodo('${t.id}', this.checked)"
-               class="h-5 w-5 mt-1 text-blue-600 rounded border-gray-300 cursor-pointer">
+               class="h-5 w-5 mt-1 text-emerald-600 rounded border-slate-300 cursor-pointer focus:ring-emerald-500">
         <div class="ml-4 flex-1 ${t.completed ? 'opacity-50' : ''}">
-          <div class="font-medium text-gray-900 ${t.completed ? 'line-through' : ''}">${this.escapeHtml(t.title)}</div>
-          ${t.description ? `<div class="text-sm text-gray-600 mt-1">${this.escapeHtml(t.description)}</div>` : ''}
-          <div class="text-sm text-gray-500 mt-1">
+          <div class="font-medium text-slate-800 ${t.completed ? 'line-through' : ''}">${this.escapeHtml(t.title)}</div>
+          ${t.description ? `<div class="text-sm text-slate-600 mt-1">${this.escapeHtml(t.description)}</div>` : ''}
+          <div class="text-sm text-slate-500 mt-1">
             <span class="mr-3">${t.linkedType === 'contact' ? `${this.escapeHtml(t.linkedName)} @ ${this.escapeHtml(t.linkedCompanyName || '')}` : this.escapeHtml(t.linkedName)}</span>
-            <span class="text-gray-400">Due: ${formatDateTime(t.dueDate)}</span>
+            <span class="text-slate-400">Due: ${formatDateTime(t.dueDate)}</span>
           </div>
         </div>
         <div class="flex gap-2">
-          <button onclick="views.navigateToLinked('${t.linkedType}', '${t.linkedId}')" class="text-blue-600 hover:text-blue-800 text-sm">View</button>
-          <button onclick="views.editTodo('${t.id}')" class="text-gray-400 hover:text-gray-600 text-sm">Edit</button>
+          <button onclick="views.navigateToLinked('${t.linkedType}', '${t.linkedId}')" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium">View</button>
+          <button onclick="views.editTodo('${t.id}')" class="text-slate-400 hover:text-slate-600 text-sm">Edit</button>
           <button onclick="views.deleteTodo('${t.id}')" class="text-red-400 hover:text-red-600 text-sm">Delete</button>
         </div>
       </div>
@@ -1507,11 +1513,11 @@ const views = {
     // Update button styles
     document.querySelectorAll('.todo-filter').forEach(btn => {
       if (btn.dataset.filter === filter) {
-        btn.classList.remove('bg-gray-100', 'text-gray-600');
-        btn.classList.add('bg-blue-100', 'text-blue-700');
+        btn.classList.remove('bg-slate-100', 'text-slate-600');
+        btn.classList.add('bg-emerald-100', 'text-emerald-700');
       } else {
-        btn.classList.remove('bg-blue-100', 'text-blue-700');
-        btn.classList.add('bg-gray-100', 'text-gray-600');
+        btn.classList.remove('bg-emerald-100', 'text-emerald-700');
+        btn.classList.add('bg-slate-100', 'text-slate-600');
       }
     });
 
@@ -1543,27 +1549,27 @@ const views = {
     const contacts = await api.get('/api/contacts');
 
     modal.show(`
-      <h3 class="text-lg font-semibold mb-4">Add ToDo</h3>
+      <h3 class="text-lg font-semibold text-slate-800 mb-4">Add ToDo</h3>
       <form onsubmit="views.saveTodo(event)">
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Title *</label>
           <input type="text" id="todo-title" required
-                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                 class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
         </div>
 
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Link to *</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Link to *</label>
           <select id="todo-linked-type" onchange="views.updateLinkedOptions()"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
             <option value="contact" ${linkedType === 'contact' ? 'selected' : ''}>Contact</option>
             <option value="company" ${linkedType === 'company' ? 'selected' : ''}>Company</option>
           </select>
         </div>
 
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Select *</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Select *</label>
           <select id="todo-linked-id" required
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
             ${linkedType === 'company' ?
               companies.map(c => `<option value="${c.id}" ${c.id === linkedId ? 'selected' : ''}>${this.escapeHtml(c.name)}</option>`).join('') :
               contacts.map(c => `<option value="${c.id}" ${c.id === linkedId ? 'selected' : ''}>${this.escapeHtml(c.name)} @ ${this.escapeHtml(c.companyName)}</option>`).join('')
@@ -1572,20 +1578,20 @@ const views = {
         </div>
 
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Due Date</label>
           <input type="datetime-local" id="todo-due-date" value="${new Date().toISOString().slice(0, 16)}"
-                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                 class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
         </div>
 
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Description</label>
           <textarea id="todo-description" rows="3" placeholder="Additional details..."
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                    class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"></textarea>
         </div>
 
         <div class="flex justify-end gap-2">
-          <button type="button" onclick="modal.hide()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Save</button>
+          <button type="button" onclick="modal.hide()" class="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium">Cancel</button>
+          <button type="submit" class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-4 py-2 rounded-lg hover:from-emerald-600 hover:to-teal-700 font-medium shadow-sm">Save</button>
         </div>
       </form>
     `);
@@ -1634,25 +1640,25 @@ const views = {
     const dueDateValue = todo.dueDate ? new Date(todo.dueDate).toISOString().slice(0, 16) : '';
 
     modal.show(`
-      <h3 class="text-lg font-semibold mb-4">Edit ToDo</h3>
+      <h3 class="text-lg font-semibold text-slate-800 mb-4">Edit ToDo</h3>
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Title</label>
         <input type="text" id="edit-todo-title" value="${this.escapeHtml(todo.title)}"
-               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+               class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
       </div>
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Due Date</label>
         <input type="datetime-local" id="edit-todo-due-date" value="${dueDateValue}"
-               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+               class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
       </div>
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Description</label>
         <textarea id="edit-todo-description" rows="3"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">${this.escapeHtml(todo.description || '')}</textarea>
+                  class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">${this.escapeHtml(todo.description || '')}</textarea>
       </div>
       <div class="flex justify-end gap-2">
-        <button onclick="modal.hide()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-        <button onclick="views.updateTodo('${id}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Save</button>
+        <button onclick="modal.hide()" class="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium">Cancel</button>
+        <button onclick="views.updateTodo('${id}')" class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-4 py-2 rounded-lg hover:from-emerald-600 hover:to-teal-700 font-medium shadow-sm">Save</button>
       </div>
     `);
   },
@@ -1697,25 +1703,25 @@ const views = {
     const dueDateValue = todo.dueDate ? new Date(todo.dueDate).toISOString().slice(0, 16) : '';
 
     modal.show(`
-      <h3 class="text-lg font-semibold mb-4">Edit ToDo</h3>
+      <h3 class="text-lg font-semibold text-slate-800 mb-4">Edit ToDo</h3>
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Title</label>
         <input type="text" id="edit-todo-title" value="${this.escapeHtml(todo.title)}"
-               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+               class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
       </div>
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Due Date</label>
         <input type="datetime-local" id="edit-todo-due-date" value="${dueDateValue}"
-               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+               class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
       </div>
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Description</label>
         <textarea id="edit-todo-description" rows="3"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">${this.escapeHtml(todo.description || '')}</textarea>
+                  class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">${this.escapeHtml(todo.description || '')}</textarea>
       </div>
       <div class="flex justify-end gap-2">
-        <button onclick="modal.hide()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-        <button onclick="views.updateTodoInline('${todoId}', '${linkedType}', '${linkedId}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Save</button>
+        <button onclick="modal.hide()" class="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium">Cancel</button>
+        <button onclick="views.updateTodoInline('${todoId}', '${linkedType}', '${linkedId}')" class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-4 py-2 rounded-lg hover:from-emerald-600 hover:to-teal-700 font-medium shadow-sm">Save</button>
       </div>
     `);
   },
@@ -1759,43 +1765,43 @@ const views = {
     container.innerHTML = `
       <div class="mb-6 flex justify-between items-center">
         <div>
-          <h2 class="text-2xl font-bold text-gray-900">Candidates</h2>
-          <p class="text-gray-600">${candidates.length} candidates</p>
+          <h2 class="text-2xl font-bold text-slate-800">Candidates</h2>
+          <p class="text-slate-500">${candidates.length} candidates</p>
         </div>
         <button onclick="router.navigate('candidate-form')"
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-          Add Candidate
+                class="bg-gradient-to-r from-rose-500 to-pink-600 text-white px-5 py-2.5 rounded-lg hover:from-rose-600 hover:to-pink-700 transition-all font-medium shadow-sm">
+          + Add Candidate
         </button>
       </div>
 
       <div class="mb-4">
         <input type="text" id="candidate-search-input" placeholder="Search candidates (name, email, role, skills)..."
-               class="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+               class="w-full md:w-96 px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors"
                oninput="views.filterCandidates()">
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+      <div class="bg-white shadow-sm rounded-xl overflow-hidden border border-slate-200">
+        <table class="min-w-full divide-y divide-slate-200">
+          <thead class="bg-gradient-to-r from-slate-50 to-slate-100">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+              <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
                   onclick="views.sortCandidates('name')">
-                Name <span id="sort-candidate-name" class="text-blue-600"></span>
+                Name <span id="sort-candidate-name" class="text-rose-600"></span>
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+              <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
                   onclick="views.sortCandidates('role')">
                 Role <span id="sort-candidate-role"></span>
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+              <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
                   onclick="views.sortCandidates('skills')">
                 Skills <span id="sort-candidate-skills"></span>
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                 Resume
               </th>
             </tr>
           </thead>
-          <tbody id="candidates-table" class="bg-white divide-y divide-gray-200">
+          <tbody id="candidates-table" class="bg-white divide-y divide-slate-100">
             ${this.renderCandidateRows(candidates)}
           </tbody>
         </table>
@@ -1810,18 +1816,18 @@ const views = {
 
   renderCandidateRows(candidates) {
     if (candidates.length === 0) {
-      return `<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">No candidates found</td></tr>`;
+      return `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-500">No candidates found</td></tr>`;
     }
     return candidates.map(c => `
-      <tr class="hover:bg-gray-50 cursor-pointer" onclick="router.navigate('candidate-detail', {id: '${c.id}'})">
+      <tr class="hover:bg-rose-50/50 cursor-pointer transition-colors" onclick="router.navigate('candidate-detail', {id: '${c.id}'})">
         <td class="px-6 py-4 whitespace-nowrap">
-          <div class="font-medium text-gray-900">${this.escapeHtml(c.name)}</div>
-          ${c.email ? `<div class="text-sm text-gray-500">${this.escapeHtml(c.email)}</div>` : ''}
+          <div class="font-medium text-slate-800">${this.escapeHtml(c.name)}</div>
+          ${c.email ? `<div class="text-sm text-slate-500">${this.escapeHtml(c.email)}</div>` : ''}
         </td>
-        <td class="px-6 py-4 whitespace-nowrap text-gray-600">${this.escapeHtml(c.role || '-')}</td>
-        <td class="px-6 py-4 text-gray-600">${this.escapeHtml(c.skills || '-')}</td>
-        <td class="px-6 py-4 whitespace-nowrap text-gray-500">
-          ${c.resumeFilename ? '<span class="text-green-600">Uploaded</span>' : '-'}
+        <td class="px-6 py-4 whitespace-nowrap text-slate-600">${this.escapeHtml(c.role || '-')}</td>
+        <td class="px-6 py-4 text-slate-600">${this.escapeHtml(c.skills || '-')}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-slate-500">
+          ${c.resumeFilename ? '<span class="text-emerald-600 font-medium">Uploaded</span>' : '-'}
         </td>
       </tr>
     `).join('');
@@ -1877,46 +1883,46 @@ const views = {
 
     container.innerHTML = `
       <div class="mb-6">
-        <a href="#" onclick="router.navigate('candidates'); return false;" class="text-blue-600 hover:text-blue-800">
+        <a href="#" onclick="router.navigate('candidates'); return false;" class="text-rose-600 hover:text-rose-700 font-medium">
           ← Back to Candidates
         </a>
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
+      <div class="bg-white shadow-sm rounded-xl p-6 mb-6 border border-slate-200">
         <div class="flex justify-between items-start mb-4">
           <div>
-            <h2 class="text-2xl font-bold text-gray-900">${this.escapeHtml(candidate.name)}</h2>
-            ${candidate.role ? `<p class="text-gray-600">${this.escapeHtml(candidate.role)}</p>` : ''}
+            <h2 class="text-2xl font-bold text-slate-800">${this.escapeHtml(candidate.name)}</h2>
+            ${candidate.role ? `<p class="text-slate-600">${this.escapeHtml(candidate.role)}</p>` : ''}
           </div>
           <div class="flex gap-2">
             <button onclick="router.navigate('candidate-form', {id: '${candidate.id}'})"
-                    class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
+                    class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors font-medium">
               Edit
             </button>
             <button onclick="views.deleteCandidate('${candidate.id}')"
-                    class="bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200 transition">
+                    class="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors font-medium">
               Delete
             </button>
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4 text-sm">
-          ${candidate.email ? `<div><span class="text-gray-500">Email:</span> <a href="mailto:${this.escapeHtml(candidate.email)}" class="text-blue-600">${this.escapeHtml(candidate.email)}</a></div>` : ''}
-          ${candidate.phone ? `<div><span class="text-gray-500">Phone:</span> ${this.escapeHtml(candidate.phone)}</div>` : ''}
+          ${candidate.email ? `<div><span class="text-slate-500">Email:</span> <a href="mailto:${this.escapeHtml(candidate.email)}" class="text-rose-600 hover:text-rose-700">${this.escapeHtml(candidate.email)}</a></div>` : ''}
+          ${candidate.phone ? `<div><span class="text-slate-500">Phone:</span> <span class="text-slate-700">${this.escapeHtml(candidate.phone)}</span></div>` : ''}
         </div>
 
         ${candidate.skills ? `
-          <div class="mt-4 pt-4 border-t border-gray-200">
-            <h3 class="text-sm font-medium text-gray-500 mb-2">Skills</h3>
-            <p class="text-gray-700">${this.escapeHtml(candidate.skills)}</p>
+          <div class="mt-4 pt-4 border-t border-slate-200">
+            <h3 class="text-sm font-medium text-slate-500 mb-2">Skills</h3>
+            <p class="text-slate-700">${this.escapeHtml(candidate.skills)}</p>
           </div>
         ` : ''}
 
         ${candidate.resumeFilename ? `
-          <div class="mt-4 pt-4 border-t border-gray-200">
-            <h3 class="text-sm font-medium text-gray-500 mb-2">Resume</h3>
+          <div class="mt-4 pt-4 border-t border-slate-200">
+            <h3 class="text-sm font-medium text-slate-500 mb-2">Resume</h3>
             <a href="/api/candidates/${candidate.id}/resume"
-               class="inline-flex items-center text-blue-600 hover:text-blue-800"
+               class="inline-flex items-center text-rose-600 hover:text-rose-700 font-medium"
                download>
               <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -1927,14 +1933,14 @@ const views = {
         ` : ''}
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Comments</h3>
+      <div class="bg-white shadow-sm rounded-xl p-6 border border-slate-200">
+        <h3 class="text-lg font-semibold text-slate-800 mb-4">Comments</h3>
 
         <form onsubmit="views.addCandidateComment(event, '${candidate.id}')" class="mb-6">
           <textarea id="new-candidate-comment" rows="3" placeholder="Add a comment..."
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                    class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors"></textarea>
           <div class="mt-2">
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+            <button type="submit" class="bg-gradient-to-r from-rose-500 to-pink-600 text-white px-4 py-2 rounded-lg hover:from-rose-600 hover:to-pink-700 transition-all font-medium shadow-sm">
               Add Comment
             </button>
           </div>
@@ -1951,19 +1957,19 @@ const views = {
 
   renderCandidateComments(comments, candidateId) {
     if (!comments || comments.length === 0) {
-      return '<p class="text-gray-500">No comments yet</p>';
+      return '<p class="text-slate-500">No comments yet</p>';
     }
 
     return comments.map(comment => `
-      <div class="border-l-4 border-purple-200 pl-4 py-2" data-comment-id="${comment.id}">
+      <div class="border-l-4 border-rose-300 pl-4 py-2 bg-rose-50/30 rounded-r-lg" data-comment-id="${comment.id}">
         <div class="flex justify-between items-start">
-          <p class="text-gray-700 whitespace-pre-wrap">${this.escapeHtml(comment.content)}</p>
+          <p class="text-slate-700 whitespace-pre-wrap">${this.escapeHtml(comment.content)}</p>
           <div class="flex gap-2 ml-4">
-            <button onclick="views.editCandidateComment('${candidateId}', '${comment.id}')" class="text-gray-400 hover:text-gray-600 text-sm">Edit</button>
+            <button onclick="views.editCandidateComment('${candidateId}', '${comment.id}')" class="text-slate-400 hover:text-slate-600 text-sm">Edit</button>
             <button onclick="views.deleteCandidateComment('${candidateId}', '${comment.id}')" class="text-red-400 hover:text-red-600 text-sm">Delete</button>
           </div>
         </div>
-        <p class="text-xs text-gray-400 mt-1">${formatDateTime(comment.createdAt)}</p>
+        <p class="text-xs text-slate-400 mt-1">${formatDateTime(comment.createdAt)}</p>
       </div>
     `).join('');
   },
@@ -1982,11 +1988,11 @@ const views = {
     if (!comment) return;
 
     modal.show(`
-      <h3 class="text-lg font-semibold mb-4">Edit Comment</h3>
-      <textarea id="edit-candidate-comment-content" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg">${this.escapeHtml(comment.content)}</textarea>
+      <h3 class="text-lg font-semibold text-slate-800 mb-4">Edit Comment</h3>
+      <textarea id="edit-candidate-comment-content" rows="4" class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors">${this.escapeHtml(comment.content)}</textarea>
       <div class="flex justify-end gap-2 mt-4">
-        <button onclick="modal.hide()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-        <button onclick="views.saveCandidateComment('${candidateId}', '${commentId}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Save</button>
+        <button onclick="modal.hide()" class="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium">Cancel</button>
+        <button onclick="views.saveCandidateComment('${candidateId}', '${commentId}')" class="bg-gradient-to-r from-rose-500 to-pink-600 text-white px-4 py-2 rounded-lg hover:from-rose-600 hover:to-pink-700 font-medium shadow-sm">Save</button>
       </div>
     `);
   },
@@ -2022,62 +2028,62 @@ const views = {
 
     container.innerHTML = `
       <div class="mb-6">
-        <a href="#" onclick="router.navigate('candidates'); return false;" class="text-blue-600 hover:text-blue-800">
+        <a href="#" onclick="router.navigate('candidates'); return false;" class="text-rose-600 hover:text-rose-700 font-medium">
           ← Back to Candidates
         </a>
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg p-6">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">${id ? 'Edit Candidate' : 'New Candidate'}</h2>
+      <div class="bg-white shadow-sm rounded-xl p-6 border border-slate-200">
+        <h2 class="text-2xl font-bold text-slate-800 mb-6">${id ? 'Edit Candidate' : 'New Candidate'}</h2>
 
         <form id="candidate-form" onsubmit="views.saveCandidate(event, '${id || ''}')" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Name *</label>
             <input type="text" id="candidate-name" value="${this.escapeHtml(candidate.name)}" required
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                   class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors">
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
               <input type="email" id="candidate-email" value="${this.escapeHtml(candidate.email || '')}"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                     class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors">
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Phone</label>
               <input type="tel" id="candidate-phone" value="${this.escapeHtml(candidate.phone || '')}"
-                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                     class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors">
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Role</label>
             <input type="text" id="candidate-role" value="${this.escapeHtml(candidate.role || '')}"
                    placeholder="e.g., Senior Developer, Product Manager"
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                   class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors">
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Skills</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Skills</label>
             <input type="text" id="candidate-skills" value="${this.escapeHtml(candidate.skills || '')}"
                    placeholder="e.g., JavaScript, React, Node.js, PostgreSQL"
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                   class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors">
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Resume (PDF, DOC, DOCX - max 10MB)</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Resume (PDF, DOC, DOCX - max 10MB)</label>
             ${candidate.resumeOriginalName ? `
-              <p class="text-sm text-gray-500 mb-2">Current: ${this.escapeHtml(candidate.resumeOriginalName)}</p>
+              <p class="text-sm text-slate-500 mb-2">Current: ${this.escapeHtml(candidate.resumeOriginalName)}</p>
             ` : ''}
             <input type="file" id="candidate-resume" accept=".pdf,.doc,.docx"
-                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                   class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100">
           </div>
 
           <div class="flex justify-end gap-4 pt-4">
             <button type="button" onclick="router.navigate('candidates')"
-                    class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                    class="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium">Cancel</button>
             <button type="submit"
-                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">Save</button>
+                    class="bg-gradient-to-r from-rose-500 to-pink-600 text-white px-6 py-2 rounded-lg hover:from-rose-600 hover:to-pink-700 transition-all font-medium shadow-sm">Save</button>
           </div>
         </form>
       </div>
@@ -2144,27 +2150,27 @@ const views = {
 
     container.innerHTML = `
       <div class="mb-6">
-        <a href="#" onclick="router.navigate('contacts'); return false;" class="text-blue-600 hover:text-blue-800">
+        <a href="#" onclick="router.navigate('contacts'); return false;" class="text-sky-600 hover:text-sky-700 font-medium">
           ← Back to Contacts
         </a>
       </div>
 
-      <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">${isSolo ? 'Create a Team' : 'Team Settings'}</h2>
+      <div class="bg-white shadow-sm rounded-xl p-6 mb-6 border border-slate-200">
+        <h2 class="text-2xl font-bold text-slate-800 mb-6">${isSolo ? 'Create a Team' : 'Team Settings'}</h2>
 
         ${isSolo ? `
-        <div class="mb-6 p-4 bg-blue-50 rounded-lg">
-          <p class="text-blue-800">Invite someone to create a team. Once they accept, you'll both be able to see and edit all data. You'll become the team owner.</p>
+        <div class="mb-6 p-4 bg-sky-50 rounded-lg border border-sky-100">
+          <p class="text-sky-800">Invite someone to create a team. Once they accept, you'll both be able to see and edit all data. You'll become the team owner.</p>
         </div>
         ` : ''}
 
         <!-- Invite Member -->
         <div class="mb-8">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Invite Team Member</h3>
+          <h3 class="text-lg font-semibold text-slate-800 mb-4">Invite Team Member</h3>
           <form onsubmit="views.sendInvitation(event)" class="flex gap-2">
             <input type="email" id="invite-email" placeholder="Enter email address" required
-                   class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                   class="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
+            <button type="submit" class="bg-gradient-to-r from-sky-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all font-medium shadow-sm">
               Send Invitation
             </button>
           </form>
@@ -2174,7 +2180,7 @@ const views = {
         ${!isSolo ? `
         <!-- Pending Invitations -->
         <div class="mb-8">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Pending Invitations</h3>
+          <h3 class="text-lg font-semibold text-slate-800 mb-4">Pending Invitations</h3>
           <div id="pending-invitations">
             ${this.renderPendingInvitations(teamData.invitations)}
           </div>
@@ -2182,7 +2188,7 @@ const views = {
 
         <!-- Team Members -->
         <div class="mb-8">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Team Members</h3>
+          <h3 class="text-lg font-semibold text-slate-800 mb-4">Team Members</h3>
           <div id="team-members" class="space-y-2">
             ${this.renderTeamMembers(teamData.members)}
           </div>
@@ -2190,17 +2196,17 @@ const views = {
 
         <!-- Transfer Ownership -->
         ${teamData.members && teamData.members.filter(m => !m.isOwner).length > 0 ? `
-        <div class="border-t pt-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Transfer Ownership</h3>
-          <p class="text-sm text-gray-600 mb-4">Transfer team ownership to another member. You will become a regular member after the transfer.</p>
+        <div class="border-t border-slate-200 pt-6">
+          <h3 class="text-lg font-semibold text-slate-800 mb-4">Transfer Ownership</h3>
+          <p class="text-sm text-slate-600 mb-4">Transfer team ownership to another member. You will become a regular member after the transfer.</p>
           <div class="flex gap-2">
-            <select id="new-owner-select" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            <select id="new-owner-select" class="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors">
               <option value="">Select a member...</option>
               ${teamData.members.filter(m => !m.isOwner).map(m => `
                 <option value="${m.id}">${this.escapeHtml(m.username)} (${this.escapeHtml(m.email)})</option>
               `).join('')}
             </select>
-            <button onclick="views.transferOwnership()" class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition">
+            <button onclick="views.transferOwnership()" class="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-medium shadow-sm">
               Transfer
             </button>
           </div>
@@ -2215,15 +2221,15 @@ const views = {
 
   renderPendingInvitations(invitations) {
     if (!invitations || invitations.length === 0) {
-      return '<p class="text-gray-500">No pending invitations</p>';
+      return '<p class="text-slate-500">No pending invitations</p>';
     }
     return invitations.map(inv => `
-      <div class="flex items-center justify-between py-2 border-b border-gray-100">
+      <div class="flex items-center justify-between py-3 border-b border-slate-100">
         <div>
-          <span class="text-gray-900">${this.escapeHtml(inv.email)}</span>
-          <span class="text-sm text-gray-500 ml-2">Sent ${formatDate(inv.createdAt)}</span>
+          <span class="text-slate-800 font-medium">${this.escapeHtml(inv.email)}</span>
+          <span class="text-sm text-slate-500 ml-2">Sent ${formatDate(inv.createdAt)}</span>
         </div>
-        <button onclick="views.cancelInvitation('${inv.id}')" class="text-red-600 hover:text-red-800 text-sm">
+        <button onclick="views.cancelInvitation('${inv.id}')" class="text-red-500 hover:text-red-700 text-sm font-medium">
           Cancel
         </button>
       </div>
@@ -2232,14 +2238,14 @@ const views = {
 
   renderTeamMembers(members) {
     return members.map(m => `
-      <div class="flex items-center justify-between py-2 border-b border-gray-100">
+      <div class="flex items-center justify-between py-3 border-b border-slate-100">
         <div class="flex items-center gap-2">
-          <span class="text-gray-900">${this.escapeHtml(m.username)}</span>
-          <span class="text-sm text-gray-500">(${this.escapeHtml(m.email)})</span>
-          ${m.isOwner ? '<span class="px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-800">Owner</span>' : ''}
+          <span class="text-slate-800 font-medium">${this.escapeHtml(m.username)}</span>
+          <span class="text-sm text-slate-500">(${this.escapeHtml(m.email)})</span>
+          ${m.isOwner ? '<span class="px-2.5 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 font-medium">Owner</span>' : ''}
         </div>
         ${!m.isOwner ? `
-          <button onclick="views.removeMember('${m.id}')" class="text-red-600 hover:text-red-800 text-sm">
+          <button onclick="views.removeMember('${m.id}')" class="text-red-500 hover:text-red-700 text-sm font-medium">
             Remove
           </button>
         ` : ''}

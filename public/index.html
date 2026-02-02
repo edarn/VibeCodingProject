@@ -3,37 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Personal CRM</title>
+  <title>Simple CRM</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+            }
+          }
+        }
+      }
+    }
+  </script>
   <style>
     [x-cloak] { display: none !important; }
+    .nav-gradient {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #3b7ab8 100%);
+    }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-slate-50 min-h-screen">
   <!-- Navigation -->
-  <nav class="bg-white shadow-sm border-b border-gray-200">
+  <nav class="nav-gradient shadow-lg">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16">
         <div class="flex items-center">
-          <h1 class="text-xl font-semibold text-gray-800">Personal CRM</h1>
-          <div id="nav-links" class="ml-10 flex space-x-4 hidden">
+          <h1 class="text-xl font-bold text-white tracking-wide">Simple CRM</h1>
+          <div id="nav-links" class="ml-10 flex space-x-2 hidden">
             <a href="#" onclick="router.navigate('contacts'); return false;"
-               class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+               class="nav-link px-4 py-2 rounded-lg text-sm font-medium text-blue-100 hover:text-white hover:bg-white/20 transition-all duration-200"
                data-route="contacts">
               Contacts
             </a>
             <a href="#" onclick="router.navigate('companies'); return false;"
-               class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+               class="nav-link px-4 py-2 rounded-lg text-sm font-medium text-blue-100 hover:text-white hover:bg-white/20 transition-all duration-200"
                data-route="companies">
               Companies
             </a>
             <a href="#" onclick="router.navigate('candidates'); return false;"
-               class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+               class="nav-link px-4 py-2 rounded-lg text-sm font-medium text-blue-100 hover:text-white hover:bg-white/20 transition-all duration-200"
                data-route="candidates">
               Candidates
             </a>
             <a href="#" onclick="router.navigate('todos'); return false;"
-               class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+               class="nav-link px-4 py-2 rounded-lg text-sm font-medium text-blue-100 hover:text-white hover:bg-white/20 transition-all duration-200"
                data-route="todos">
               ToDos
             </a>
@@ -41,17 +61,17 @@
         </div>
         <div id="user-section" class="flex items-center hidden relative">
           <div class="relative">
-            <button id="user-menu-button" onclick="toggleUserMenu()" class="flex items-center text-sm text-gray-600 hover:text-gray-900">
-              <span id="current-user" class="mr-2"></span>
+            <button id="user-menu-button" onclick="toggleUserMenu()" class="flex items-center text-sm text-blue-100 hover:text-white transition-colors">
+              <span id="current-user" class="mr-2 font-medium"></span>
               <span id="user-role-badge" class="hidden px-2 py-0.5 text-xs rounded-full mr-2"></span>
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
               </svg>
             </button>
-            <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-200">
+            <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50 border border-slate-200">
               <div id="team-menu-items"></div>
-              <hr class="my-1 border-gray-200" id="menu-divider">
-              <button onclick="auth.logout(); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+              <hr class="my-1 border-slate-200" id="menu-divider">
+              <button onclick="auth.logout(); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors">
                 Logout
               </button>
             </div>
@@ -62,17 +82,17 @@
   </nav>
 
   <!-- Invitation Banner -->
-  <div id="invitation-banner" class="hidden bg-blue-50 border-b border-blue-200">
+  <div id="invitation-banner" class="hidden bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
       <div class="flex items-center justify-between flex-wrap">
         <div class="flex items-center">
-          <span class="text-blue-800" id="invitation-text"></span>
+          <span class="text-amber-800 font-medium" id="invitation-text"></span>
         </div>
         <div class="flex space-x-2">
-          <button onclick="teamManager.showAcceptModal()" class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 text-sm">
+          <button onclick="teamManager.showAcceptModal()" class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-4 py-1.5 rounded-lg hover:from-emerald-600 hover:to-teal-700 text-sm font-medium shadow-sm transition-all">
             Accept
           </button>
-          <button onclick="teamManager.declineInvitation()" class="bg-white text-gray-700 px-4 py-1 rounded border border-gray-300 hover:bg-gray-50 text-sm">
+          <button onclick="teamManager.declineInvitation()" class="bg-white text-slate-700 px-4 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-sm font-medium transition-colors">
             Decline
           </button>
         </div>
@@ -91,15 +111,15 @@
   </main>
 
   <!-- Modal Container -->
-  <div id="modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
+  <div id="modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-6 border border-slate-200 w-full max-w-md shadow-2xl rounded-xl bg-white">
       <div id="modal-content"></div>
     </div>
   </div>
 
   <!-- Auth Modal (Login/Register) -->
-  <div id="auth-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
+  <div id="auth-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-6 border border-slate-200 w-full max-w-md shadow-2xl rounded-xl bg-white">
       <div id="auth-modal-content"></div>
     </div>
   </div>
