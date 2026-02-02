@@ -249,6 +249,7 @@ const router = {
       const isActive = route === current ||
           (route === 'contacts' && current?.startsWith('contact')) ||
           (route === 'companies' && current?.startsWith('company')) ||
+          (route === 'candidates' && current?.startsWith('candidate')) ||
           (route === 'todos' && current?.startsWith('todo'));
       if (isActive) {
         link.classList.add('bg-gray-100', 'text-gray-900');
@@ -289,6 +290,15 @@ const router = {
           break;
         case 'todo-form':
           await views.todoForm(app, params.linkedType, params.linkedId);
+          break;
+        case 'candidates':
+          await views.candidateList(app);
+          break;
+        case 'candidate-detail':
+          await views.candidateDetail(app, params.id);
+          break;
+        case 'candidate-form':
+          await views.candidateForm(app, params.id);
           break;
         default:
           await views.contactList(app);
@@ -1504,6 +1514,388 @@ const views = {
       router.navigate('contact-detail', { id: linkedId });
     } else {
       router.navigate('company-detail', { id: linkedId });
+    }
+  },
+
+  // ============ Candidate Views ============
+
+  // Candidate List View
+  async candidateList(container) {
+    const candidates = await api.get('/api/candidates');
+
+    container.innerHTML = `
+      <div class="mb-6 flex justify-between items-center">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900">Candidates</h2>
+          <p class="text-gray-600">${candidates.length} candidates</p>
+        </div>
+        <button onclick="router.navigate('candidate-form')"
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+          Add Candidate
+        </button>
+      </div>
+
+      <div class="mb-4">
+        <input type="text" id="candidate-search-input" placeholder="Search candidates (name, email, role, skills)..."
+               class="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+               oninput="views.filterCandidates()">
+      </div>
+
+      <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onclick="views.sortCandidates('name')">
+                Name <span id="sort-candidate-name" class="text-blue-600"></span>
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onclick="views.sortCandidates('role')">
+                Role <span id="sort-candidate-role"></span>
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onclick="views.sortCandidates('skills')">
+                Skills <span id="sort-candidate-skills"></span>
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Resume
+              </th>
+            </tr>
+          </thead>
+          <tbody id="candidates-table" class="bg-white divide-y divide-gray-200">
+            ${this.renderCandidateRows(candidates)}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    this._candidates = candidates;
+    this._candidateSort = 'name';
+    this._candidateSortAsc = true;
+    document.getElementById('sort-candidate-name').textContent = '↑';
+  },
+
+  renderCandidateRows(candidates) {
+    if (candidates.length === 0) {
+      return `<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">No candidates found</td></tr>`;
+    }
+    return candidates.map(c => `
+      <tr class="hover:bg-gray-50 cursor-pointer" onclick="router.navigate('candidate-detail', {id: '${c.id}'})">
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="font-medium text-gray-900">${this.escapeHtml(c.name)}</div>
+          ${c.email ? `<div class="text-sm text-gray-500">${this.escapeHtml(c.email)}</div>` : ''}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-gray-600">${this.escapeHtml(c.role || '-')}</td>
+        <td class="px-6 py-4 text-gray-600">${this.escapeHtml(c.skills || '-')}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-gray-500">
+          ${c.resumeFilename ? '<span class="text-green-600">Uploaded</span>' : '-'}
+        </td>
+      </tr>
+    `).join('');
+  },
+
+  filterCandidates() {
+    const query = document.getElementById('candidate-search-input').value.toLowerCase();
+    const filtered = this._candidates.filter(c =>
+      c.name.toLowerCase().includes(query) ||
+      (c.email || '').toLowerCase().includes(query) ||
+      (c.phone || '').toLowerCase().includes(query) ||
+      (c.role || '').toLowerCase().includes(query) ||
+      (c.skills || '').toLowerCase().includes(query)
+    );
+    document.getElementById('candidates-table').innerHTML = this.renderCandidateRows(filtered);
+  },
+
+  sortCandidates(field) {
+    if (this._candidateSort === field) {
+      this._candidateSortAsc = !this._candidateSortAsc;
+    } else {
+      this._candidateSort = field;
+      this._candidateSortAsc = true;
+    }
+
+    // Clear sort indicators
+    ['name', 'role', 'skills'].forEach(f => {
+      document.getElementById(`sort-candidate-${f}`).textContent = '';
+    });
+
+    const sorted = [...this._candidates].sort((a, b) => {
+      let result;
+      switch (field) {
+        case 'role':
+          result = (a.role || '').localeCompare(b.role || '');
+          break;
+        case 'skills':
+          result = (a.skills || '').localeCompare(b.skills || '');
+          break;
+        default:
+          result = (a.name || '').localeCompare(b.name || '');
+      }
+      return this._candidateSortAsc ? result : -result;
+    });
+
+    document.getElementById(`sort-candidate-${field}`).textContent = this._candidateSortAsc ? '↑' : '↓';
+    document.getElementById('candidates-table').innerHTML = this.renderCandidateRows(sorted);
+  },
+
+  // Candidate Detail View
+  async candidateDetail(container, id) {
+    const candidate = await api.get(`/api/candidates/${id}`);
+
+    container.innerHTML = `
+      <div class="mb-6">
+        <a href="#" onclick="router.navigate('candidates'); return false;" class="text-blue-600 hover:text-blue-800">
+          ← Back to Candidates
+        </a>
+      </div>
+
+      <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-900">${this.escapeHtml(candidate.name)}</h2>
+            ${candidate.role ? `<p class="text-gray-600">${this.escapeHtml(candidate.role)}</p>` : ''}
+          </div>
+          <div class="flex gap-2">
+            <button onclick="router.navigate('candidate-form', {id: '${candidate.id}'})"
+                    class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
+              Edit
+            </button>
+            <button onclick="views.deleteCandidate('${candidate.id}')"
+                    class="bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200 transition">
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          ${candidate.email ? `<div><span class="text-gray-500">Email:</span> <a href="mailto:${this.escapeHtml(candidate.email)}" class="text-blue-600">${this.escapeHtml(candidate.email)}</a></div>` : ''}
+          ${candidate.phone ? `<div><span class="text-gray-500">Phone:</span> ${this.escapeHtml(candidate.phone)}</div>` : ''}
+        </div>
+
+        ${candidate.skills ? `
+          <div class="mt-4 pt-4 border-t border-gray-200">
+            <h3 class="text-sm font-medium text-gray-500 mb-2">Skills</h3>
+            <p class="text-gray-700">${this.escapeHtml(candidate.skills)}</p>
+          </div>
+        ` : ''}
+
+        ${candidate.resumeFilename ? `
+          <div class="mt-4 pt-4 border-t border-gray-200">
+            <h3 class="text-sm font-medium text-gray-500 mb-2">Resume</h3>
+            <a href="/api/candidates/${candidate.id}/resume"
+               class="inline-flex items-center text-blue-600 hover:text-blue-800"
+               download>
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              ${this.escapeHtml(candidate.resumeOriginalName)}
+            </a>
+          </div>
+        ` : ''}
+      </div>
+
+      <div class="bg-white shadow-sm rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Comments</h3>
+
+        <form onsubmit="views.addCandidateComment(event, '${candidate.id}')" class="mb-6">
+          <textarea id="new-candidate-comment" rows="3" placeholder="Add a comment..."
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+          <div class="mt-2">
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+              Add Comment
+            </button>
+          </div>
+        </form>
+
+        <div id="candidate-comments-list" class="space-y-4">
+          ${this.renderCandidateComments(candidate.comments, candidate.id)}
+        </div>
+      </div>
+    `;
+
+    this._currentCandidate = candidate;
+  },
+
+  renderCandidateComments(comments, candidateId) {
+    if (!comments || comments.length === 0) {
+      return '<p class="text-gray-500">No comments yet</p>';
+    }
+
+    return comments.map(comment => `
+      <div class="border-l-4 border-purple-200 pl-4 py-2" data-comment-id="${comment.id}">
+        <div class="flex justify-between items-start">
+          <p class="text-gray-700 whitespace-pre-wrap">${this.escapeHtml(comment.content)}</p>
+          <div class="flex gap-2 ml-4">
+            <button onclick="views.editCandidateComment('${candidateId}', '${comment.id}')" class="text-gray-400 hover:text-gray-600 text-sm">Edit</button>
+            <button onclick="views.deleteCandidateComment('${candidateId}', '${comment.id}')" class="text-red-400 hover:text-red-600 text-sm">Delete</button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">${formatDateTime(comment.createdAt)}</p>
+      </div>
+    `).join('');
+  },
+
+  async addCandidateComment(event, candidateId) {
+    event.preventDefault();
+    const content = document.getElementById('new-candidate-comment').value.trim();
+    if (!content) return;
+
+    await api.post(`/api/candidates/${candidateId}/comments`, { content });
+    router.navigate('candidate-detail', { id: candidateId });
+  },
+
+  async editCandidateComment(candidateId, commentId) {
+    const comment = this._currentCandidate.comments.find(c => c.id === commentId);
+    if (!comment) return;
+
+    modal.show(`
+      <h3 class="text-lg font-semibold mb-4">Edit Comment</h3>
+      <textarea id="edit-candidate-comment-content" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg">${this.escapeHtml(comment.content)}</textarea>
+      <div class="flex justify-end gap-2 mt-4">
+        <button onclick="modal.hide()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+        <button onclick="views.saveCandidateComment('${candidateId}', '${commentId}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Save</button>
+      </div>
+    `);
+  },
+
+  async saveCandidateComment(candidateId, commentId) {
+    const content = document.getElementById('edit-candidate-comment-content').value.trim();
+    if (!content) return;
+
+    await api.put(`/api/candidates/${candidateId}/comments/${commentId}`, { content });
+    modal.hide();
+    router.navigate('candidate-detail', { id: candidateId });
+  },
+
+  async deleteCandidateComment(candidateId, commentId) {
+    if (!confirm('Delete this comment?')) return;
+    await api.delete(`/api/candidates/${candidateId}/comments/${commentId}`);
+    router.navigate('candidate-detail', { id: candidateId });
+  },
+
+  async deleteCandidate(id) {
+    if (!confirm('Delete this candidate?')) return;
+    await api.delete(`/api/candidates/${id}`);
+    router.navigate('candidates');
+  },
+
+  // Candidate Form View
+  async candidateForm(container, id) {
+    let candidate = { name: '', email: '', phone: '', role: '', skills: '', resumeOriginalName: '' };
+
+    if (id) {
+      candidate = await api.get(`/api/candidates/${id}`);
+    }
+
+    container.innerHTML = `
+      <div class="mb-6">
+        <a href="#" onclick="router.navigate('candidates'); return false;" class="text-blue-600 hover:text-blue-800">
+          ← Back to Candidates
+        </a>
+      </div>
+
+      <div class="bg-white shadow-sm rounded-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">${id ? 'Edit Candidate' : 'New Candidate'}</h2>
+
+        <form id="candidate-form" onsubmit="views.saveCandidate(event, '${id || ''}')" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+            <input type="text" id="candidate-name" value="${this.escapeHtml(candidate.name)}" required
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input type="email" id="candidate-email" value="${this.escapeHtml(candidate.email || '')}"
+                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <input type="tel" id="candidate-phone" value="${this.escapeHtml(candidate.phone || '')}"
+                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <input type="text" id="candidate-role" value="${this.escapeHtml(candidate.role || '')}"
+                   placeholder="e.g., Senior Developer, Product Manager"
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Skills</label>
+            <input type="text" id="candidate-skills" value="${this.escapeHtml(candidate.skills || '')}"
+                   placeholder="e.g., JavaScript, React, Node.js, PostgreSQL"
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Resume (PDF, DOC, DOCX - max 10MB)</label>
+            ${candidate.resumeOriginalName ? `
+              <p class="text-sm text-gray-500 mb-2">Current: ${this.escapeHtml(candidate.resumeOriginalName)}</p>
+            ` : ''}
+            <input type="file" id="candidate-resume" accept=".pdf,.doc,.docx"
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+
+          <div class="flex justify-end gap-4 pt-4">
+            <button type="button" onclick="router.navigate('candidates')"
+                    class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+            <button type="submit"
+                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">Save</button>
+          </div>
+        </form>
+      </div>
+    `;
+  },
+
+  async saveCandidate(event, id) {
+    event.preventDefault();
+
+    const formData = new FormData();
+    formData.append('name', document.getElementById('candidate-name').value);
+    formData.append('email', document.getElementById('candidate-email').value);
+    formData.append('phone', document.getElementById('candidate-phone').value);
+    formData.append('role', document.getElementById('candidate-role').value);
+    formData.append('skills', document.getElementById('candidate-skills').value);
+
+    const resumeFile = document.getElementById('candidate-resume').files[0];
+    if (resumeFile) {
+      formData.append('resume', resumeFile);
+    }
+
+    try {
+      let response;
+      if (id) {
+        response = await fetch(`/api/candidates/${id}`, {
+          method: 'PUT',
+          body: formData
+        });
+      } else {
+        response = await fetch('/api/candidates', {
+          method: 'POST',
+          body: formData
+        });
+      }
+
+      if (response.status === 401) {
+        auth.showLoginModal();
+        throw new Error('Authentication required');
+      }
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to save candidate');
+      }
+
+      const candidate = await response.json();
+      router.navigate('candidate-detail', { id: candidate.id });
+    } catch (err) {
+      if (err.message !== 'Authentication required') {
+        alert('Error: ' + err.message);
+      }
     }
   },
 

@@ -98,6 +98,34 @@ function initializeDatabase() {
     )
   `);
 
+  // Candidates table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS candidates (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT DEFAULT '',
+      phone TEXT DEFAULT '',
+      role TEXT DEFAULT '',
+      skills TEXT DEFAULT '',
+      resume_filename TEXT DEFAULT '',
+      resume_original_name TEXT DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `);
+
+  // Candidate comments table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS candidate_comments (
+      id TEXT PRIMARY KEY,
+      candidate_id TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE CASCADE
+    )
+  `);
+
   // Create indexes for better query performance
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_contacts_company_id ON contacts(company_id);
@@ -105,6 +133,7 @@ function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_todos_linked ON todos(linked_type, linked_id);
     CREATE INDEX IF NOT EXISTS idx_todos_completed ON todos(completed);
     CREATE INDEX IF NOT EXISTS idx_sessions_expired ON sessions(expired);
+    CREATE INDEX IF NOT EXISTS idx_candidate_comments_candidate_id ON candidate_comments(candidate_id);
   `);
 
   console.log('Database initialized successfully');

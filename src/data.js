@@ -588,6 +588,163 @@ function createUser({ username, email, passwordHash }) {
   };
 }
 
+// ============ Candidate Functions ============
+
+function getAllCandidates() {
+  const rows = db.prepare(`
+    SELECT * FROM candidates ORDER BY name
+  `).all();
+
+  return rows.map(row => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    role: row.role,
+    skills: row.skills,
+    resumeFilename: row.resume_filename,
+    resumeOriginalName: row.resume_original_name,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  }));
+}
+
+function getCandidateById(candidateId) {
+  const candidate = db.prepare(`
+    SELECT * FROM candidates WHERE id = ?
+  `).get(candidateId);
+
+  if (!candidate) return null;
+
+  const comments = db.prepare(`
+    SELECT * FROM candidate_comments WHERE candidate_id = ? ORDER BY created_at DESC
+  `).all(candidateId);
+
+  return {
+    id: candidate.id,
+    name: candidate.name,
+    email: candidate.email,
+    phone: candidate.phone,
+    role: candidate.role,
+    skills: candidate.skills,
+    resumeFilename: candidate.resume_filename,
+    resumeOriginalName: candidate.resume_original_name,
+    createdAt: candidate.created_at,
+    updatedAt: candidate.updated_at,
+    comments: comments.map(c => ({
+      id: c.id,
+      content: c.content,
+      createdAt: c.created_at,
+      updatedAt: c.updated_at
+    }))
+  };
+}
+
+function createCandidate({ name, email, phone, role, skills, resumeFilename, resumeOriginalName }) {
+  const id = generateId();
+  const now = getTimestamp();
+
+  db.prepare(`
+    INSERT INTO candidates (id, name, email, phone, role, skills, resume_filename, resume_original_name, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, name, email || '', phone || '', role || '', skills || '', resumeFilename || '', resumeOriginalName || '', now, now);
+
+  return {
+    id,
+    name,
+    email: email || '',
+    phone: phone || '',
+    role: role || '',
+    skills: skills || '',
+    resumeFilename: resumeFilename || '',
+    resumeOriginalName: resumeOriginalName || '',
+    createdAt: now,
+    updatedAt: now,
+    comments: []
+  };
+}
+
+function updateCandidate(candidateId, { name, email, phone, role, skills, resumeFilename, resumeOriginalName }) {
+  const now = getTimestamp();
+
+  const existing = db.prepare('SELECT * FROM candidates WHERE id = ?').get(candidateId);
+  if (!existing) return null;
+
+  db.prepare(`
+    UPDATE candidates
+    SET name = ?, email = ?, phone = ?, role = ?, skills = ?, resume_filename = ?, resume_original_name = ?, updated_at = ?
+    WHERE id = ?
+  `).run(
+    name !== undefined ? name : existing.name,
+    email !== undefined ? email : existing.email,
+    phone !== undefined ? phone : existing.phone,
+    role !== undefined ? role : existing.role,
+    skills !== undefined ? skills : existing.skills,
+    resumeFilename !== undefined ? resumeFilename : existing.resume_filename,
+    resumeOriginalName !== undefined ? resumeOriginalName : existing.resume_original_name,
+    now,
+    candidateId
+  );
+
+  return getCandidateById(candidateId);
+}
+
+function deleteCandidate(candidateId) {
+  const result = db.prepare('DELETE FROM candidates WHERE id = ?').run(candidateId);
+  return result.changes > 0;
+}
+
+function createCandidateComment(candidateId, content) {
+  const candidate = db.prepare('SELECT id FROM candidates WHERE id = ?').get(candidateId);
+  if (!candidate) return null;
+
+  const id = generateId();
+  const now = getTimestamp();
+
+  db.prepare(`
+    INSERT INTO candidate_comments (id, candidate_id, content, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(id, candidateId, content, now, now);
+
+  db.prepare('UPDATE candidates SET updated_at = ? WHERE id = ?').run(now, candidateId);
+
+  return {
+    id,
+    content,
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+function updateCandidateComment(candidateId, commentId, content) {
+  const comment = db.prepare('SELECT * FROM candidate_comments WHERE id = ? AND candidate_id = ?').get(commentId, candidateId);
+  if (!comment) return null;
+
+  const now = getTimestamp();
+
+  db.prepare('UPDATE candidate_comments SET content = ?, updated_at = ? WHERE id = ?').run(content, now, commentId);
+  db.prepare('UPDATE candidates SET updated_at = ? WHERE id = ?').run(now, candidateId);
+
+  return {
+    id: commentId,
+    content,
+    createdAt: comment.created_at,
+    updatedAt: now
+  };
+}
+
+function deleteCandidateComment(candidateId, commentId) {
+  const comment = db.prepare('SELECT * FROM candidate_comments WHERE id = ? AND candidate_id = ?').get(commentId, candidateId);
+  if (!comment) return false;
+
+  const now = getTimestamp();
+
+  db.prepare('DELETE FROM candidate_comments WHERE id = ?').run(commentId);
+  db.prepare('UPDATE candidates SET updated_at = ? WHERE id = ?').run(now, candidateId);
+
+  return true;
+}
+
 module.exports = {
   // Utilities
   generateId,
@@ -626,5 +783,15 @@ module.exports = {
   getUserByUsername,
   getUserByEmail,
   getUserById,
-  createUser
+  createUser,
+
+  // Candidates
+  getAllCandidates,
+  getCandidateById,
+  createCandidate,
+  updateCandidate,
+  deleteCandidate,
+  createCandidateComment,
+  updateCandidateComment,
+  deleteCandidateComment
 };
