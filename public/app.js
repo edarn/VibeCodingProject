@@ -64,6 +64,9 @@ const auth = {
 
     if (this.currentUser.role === 'owner') {
       menuItems.innerHTML = `
+        <button onclick="router.navigate('archive'); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          Archive
+        </button>
         <button onclick="router.navigate('team-settings'); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
           Team Settings
         </button>
@@ -71,6 +74,9 @@ const auth = {
       divider.classList.remove('hidden');
     } else if (this.currentUser.role === 'member') {
       menuItems.innerHTML = `
+        <button onclick="router.navigate('archive'); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          Archive
+        </button>
         <button onclick="teamManager.leaveTeam(); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
           Leave Team
         </button>
@@ -79,6 +85,9 @@ const auth = {
     } else {
       // Solo user - show option to invite/create team
       menuItems.innerHTML = `
+        <button onclick="router.navigate('archive'); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          Archive
+        </button>
         <button onclick="router.navigate('team-settings'); toggleUserMenu();" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
           Invite Team Members
         </button>
@@ -372,6 +381,9 @@ const router = {
           break;
         case 'team-settings':
           await views.teamSettings(app);
+          break;
+        case 'archive':
+          await views.archiveView(app);
           break;
         default:
           await views.contactList(app);
@@ -728,9 +740,9 @@ const views = {
                     class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors font-medium">
               Edit
             </button>
-            <button onclick="views.deleteContact('${contact.id}')"
-                    class="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors font-medium">
-              Delete
+            <button onclick="views.archiveContact('${contact.id}')"
+                    class="bg-amber-50 text-amber-600 px-4 py-2 rounded-lg hover:bg-amber-100 transition-colors font-medium">
+              Archive
             </button>
           </div>
         </div>
@@ -979,14 +991,24 @@ const views = {
     router.navigate('contact-detail', { id: contactId });
   },
 
-  async deleteContact(id) {
-    if (!confirm('Delete this contact and all their notes?')) return;
+  async archiveContact(id) {
+    if (!confirm('Archive this contact? You can restore it later from the Archive.')) return;
     try {
       await api.delete(`/api/contacts/${id}`);
       router.navigate('contacts');
     } catch (err) {
-      console.error('Error deleting contact:', err);
-      alert('Failed to delete contact: ' + err.message);
+      console.error('Error archiving contact:', err);
+      alert('Failed to archive contact: ' + err.message);
+    }
+  },
+
+  async restoreContact(id) {
+    try {
+      await api.post(`/api/contacts/${id}/restore`);
+      router.navigate('archive');
+    } catch (err) {
+      console.error('Error restoring contact:', err);
+      alert('Failed to restore contact: ' + err.message);
     }
   },
 
@@ -1192,9 +1214,9 @@ const views = {
                     class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors font-medium">
               Edit
             </button>
-            <button onclick="views.deleteCompany('${company.id}')"
-                    class="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors font-medium">
-              Delete
+            <button onclick="views.archiveCompany('${company.id}')"
+                    class="bg-amber-50 text-amber-600 px-4 py-2 rounded-lg hover:bg-amber-100 transition-colors font-medium">
+              Archive
             </button>
           </div>
         </div>
@@ -1267,14 +1289,24 @@ const views = {
     this._companyActivitySortAsc = false;
   },
 
-  async deleteCompany(id) {
-    if (!confirm('Delete this company and all its contacts?')) return;
+  async archiveCompany(id) {
+    if (!confirm('Archive this company and all its contacts? You can restore it later from the Archive.')) return;
     try {
       await api.delete(`/api/companies/${id}`);
       router.navigate('companies');
     } catch (err) {
-      console.error('Error deleting company:', err);
-      alert('Failed to delete company: ' + err.message);
+      console.error('Error archiving company:', err);
+      alert('Failed to archive company: ' + err.message);
+    }
+  },
+
+  async restoreCompany(id) {
+    try {
+      await api.post(`/api/companies/${id}/restore`);
+      router.navigate('archive');
+    } catch (err) {
+      console.error('Error restoring company:', err);
+      alert('Failed to restore company: ' + err.message);
     }
   },
 
@@ -2318,6 +2350,100 @@ const views = {
     } else {
       alert(result.error || 'Failed to transfer ownership');
     }
+  },
+
+  // Archive View - shows archived companies and contacts
+  async archiveView(container) {
+    const [companies, contacts] = await Promise.all([
+      api.get('/api/archive/companies'),
+      api.get('/api/archive/contacts')
+    ]);
+
+    container.innerHTML = `
+      <div class="mb-6">
+        <a href="#" onclick="router.navigate('contacts'); return false;" class="text-sky-600 hover:text-sky-700 font-medium">
+          ← Back to Contacts
+        </a>
+      </div>
+
+      <h1 class="text-2xl font-bold text-slate-800 mb-6">Archive</h1>
+
+      <div class="bg-white shadow-sm rounded-xl p-6 mb-6 border border-slate-200">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4">Archived Companies (${companies.length})</h2>
+        ${companies.length === 0 ? `
+          <p class="text-slate-500">No archived companies</p>
+        ` : `
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="text-left text-sm text-slate-500 border-b border-slate-200">
+                  <th class="pb-3 font-medium">Company</th>
+                  <th class="pb-3 font-medium">Contacts</th>
+                  <th class="pb-3 font-medium">Archived</th>
+                  <th class="pb-3 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${companies.map(c => `
+                  <tr class="border-b border-slate-100">
+                    <td class="py-3">
+                      <div class="font-medium text-slate-800">${this.escapeHtml(c.name)}</div>
+                      ${c.technologies ? `<div class="text-sm text-slate-500">${this.escapeHtml(c.technologies)}</div>` : ''}
+                    </td>
+                    <td class="py-3 text-slate-600">${c.contactCount}</td>
+                    <td class="py-3 text-sm text-slate-500">${new Date(c.archivedAt).toLocaleDateString()}</td>
+                    <td class="py-3">
+                      <button onclick="views.restoreCompany('${c.id}')"
+                              class="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors text-sm font-medium">
+                        Restore
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `}
+      </div>
+
+      <div class="bg-white shadow-sm rounded-xl p-6 border border-slate-200">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4">Archived Contacts (${contacts.length})</h2>
+        ${contacts.length === 0 ? `
+          <p class="text-slate-500">No archived contacts</p>
+        ` : `
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="text-left text-sm text-slate-500 border-b border-slate-200">
+                  <th class="pb-3 font-medium">Contact</th>
+                  <th class="pb-3 font-medium">Company</th>
+                  <th class="pb-3 font-medium">Archived</th>
+                  <th class="pb-3 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${contacts.map(c => `
+                  <tr class="border-b border-slate-100">
+                    <td class="py-3">
+                      <div class="font-medium text-slate-800">${this.escapeHtml(c.name)}</div>
+                      ${c.role ? `<div class="text-sm text-slate-500">${this.escapeHtml(c.role)}</div>` : ''}
+                    </td>
+                    <td class="py-3 text-slate-600">${this.escapeHtml(c.companyName)}</td>
+                    <td class="py-3 text-sm text-slate-500">${new Date(c.archivedAt).toLocaleDateString()}</td>
+                    <td class="py-3">
+                      <button onclick="views.restoreContact('${c.id}')"
+                              class="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors text-sm font-medium">
+                        Restore
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `}
+      </div>
+    `;
   },
 
   // Utility

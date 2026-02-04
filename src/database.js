@@ -260,6 +260,13 @@ function migrateExistingData() {
     addColumnIfNotExists(table, 'created_by', 'TEXT');
   }
 
+  // Add archived_at column for companies and contacts (archive feature)
+  addColumnIfNotExists('companies', 'archived_at', 'TEXT');
+  addColumnIfNotExists('contacts', 'archived_at', 'TEXT');
+
+  // Add deleted_at column for notes (soft delete feature)
+  addColumnIfNotExists('notes', 'deleted_at', 'TEXT');
+
   // Find the first user to assign orphaned data to
   const firstUser = db.prepare('SELECT id FROM users ORDER BY created_at ASC LIMIT 1').get();
 

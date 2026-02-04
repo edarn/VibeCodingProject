@@ -104,6 +104,9 @@ app.use('/api/candidates', requireAuth, require('./src/routes/candidates')(uploa
 app.use('/api/team', requireAuth, require('./src/routes/team'));
 app.use('/api/invitations', requireAuth, require('./src/routes/invitations'));
 
+// Archive routes
+app.use('/api/archive', requireAuth, require('./src/routes/archive'));
+
 // Serve index.html for SPA routes
 app.get('/{*splat}', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

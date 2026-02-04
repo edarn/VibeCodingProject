@@ -387,24 +387,24 @@ function getAllCompanies(userId) {
 
   let rows;
   if (teamId) {
-    // User is in a team - get team data
+    // User is in a team - get team data (exclude archived)
     rows = db.prepare(`
       SELECT c.*, COUNT(ct.id) as contact_count, u.username as created_by_username
       FROM companies c
-      LEFT JOIN contacts ct ON ct.company_id = c.id
+      LEFT JOIN contacts ct ON ct.company_id = c.id AND ct.archived_at IS NULL
       LEFT JOIN users u ON u.id = c.created_by
-      WHERE c.team_id = ?
+      WHERE c.team_id = ? AND c.archived_at IS NULL
       GROUP BY c.id
       ORDER BY c.name
     `).all(teamId);
   } else {
-    // Solo user - get only their data
+    // Solo user - get only their data (exclude archived)
     rows = db.prepare(`
       SELECT c.*, COUNT(ct.id) as contact_count, u.username as created_by_username
       FROM companies c
-      LEFT JOIN contacts ct ON ct.company_id = c.id
+      LEFT JOIN contacts ct ON ct.company_id = c.id AND ct.archived_at IS NULL
       LEFT JOIN users u ON u.id = c.created_by
-      WHERE c.created_by = ? AND c.team_id IS NULL
+      WHERE c.created_by = ? AND c.team_id IS NULL AND c.archived_at IS NULL
       GROUP BY c.id
       ORDER BY c.name
     `).all(userId);
@@ -424,8 +424,9 @@ function getAllCompanies(userId) {
   }));
 }
 
-function getCompanyById(companyId, userId) {
+function getCompanyById(companyId, userId, includeArchived = false) {
   const teamId = getUserTeamId(userId);
+  const archivedFilter = includeArchived ? '' : 'AND c.archived_at IS NULL';
 
   let company;
   if (teamId) {
@@ -433,24 +434,25 @@ function getCompanyById(companyId, userId) {
       SELECT c.*, u.username as created_by_username
       FROM companies c
       LEFT JOIN users u ON u.id = c.created_by
-      WHERE c.id = ? AND c.team_id = ?
+      WHERE c.id = ? AND c.team_id = ? ${archivedFilter}
     `).get(companyId, teamId);
   } else {
     company = db.prepare(`
       SELECT c.*, u.username as created_by_username
       FROM companies c
       LEFT JOIN users u ON u.id = c.created_by
-      WHERE c.id = ? AND c.created_by = ? AND c.team_id IS NULL
+      WHERE c.id = ? AND c.created_by = ? AND c.team_id IS NULL ${archivedFilter}
     `).get(companyId, userId);
   }
 
   if (!company) return null;
 
+  // Get non-archived contacts for this company
   const contacts = db.prepare(`
     SELECT c.*, u.username as created_by_username
     FROM contacts c
     LEFT JOIN users u ON u.id = c.created_by
-    WHERE c.company_id = ?
+    WHERE c.company_id = ? AND c.archived_at IS NULL
     ORDER BY c.name
   `).all(companyId);
 
@@ -460,6 +462,7 @@ function getCompanyById(companyId, userId) {
     technologies: company.technologies,
     organizationNumber: company.organization_number,
     address: company.address,
+    archivedAt: company.archived_at,
     createdBy: company.created_by,
     createdByUsername: company.created_by_username,
     createdAt: company.created_at,
@@ -531,18 +534,96 @@ function updateCompany(companyId, { name, technologies, organizationNumber, addr
   return getCompanyById(companyId, userId);
 }
 
-function deleteCompany(companyId, userId) {
+function archiveCompany(companyId, userId) {
   // Verify access and permission
   const company = getCompanyById(companyId, userId);
   if (!company) return { error: 'Company not found' };
 
   const role = getUserRole(userId);
   if (role === 'member' && company.createdBy !== userId) {
-    return { error: 'Permission denied. You can only delete companies you created.' };
+    return { error: 'Permission denied. You can only archive companies you created.' };
   }
 
-  const result = db.prepare('DELETE FROM companies WHERE id = ?').run(companyId);
-  return result.changes > 0 ? { success: true } : { error: 'Delete failed' };
+  const now = getTimestamp();
+
+  // Archive the company
+  db.prepare('UPDATE companies SET archived_at = ?, updated_at = ? WHERE id = ?').run(now, now, companyId);
+
+  // Also archive all contacts of this company
+  db.prepare('UPDATE contacts SET archived_at = ?, updated_at = ? WHERE company_id = ? AND archived_at IS NULL').run(now, now, companyId);
+
+  return { success: true };
+}
+
+function restoreCompany(companyId, userId) {
+  // Verify access - use includeArchived=true to find archived companies
+  const company = getCompanyById(companyId, userId, true);
+  if (!company) return { error: 'Company not found' };
+  if (!company.archivedAt) return { error: 'Company is not archived' };
+
+  const role = getUserRole(userId);
+  if (role === 'member' && company.createdBy !== userId) {
+    return { error: 'Permission denied. You can only restore companies you created.' };
+  }
+
+  const now = getTimestamp();
+
+  // Restore the company
+  db.prepare('UPDATE companies SET archived_at = NULL, updated_at = ? WHERE id = ?').run(now, companyId);
+
+  // Also restore all contacts that were archived at the same time or later
+  db.prepare(`
+    UPDATE contacts SET archived_at = NULL, updated_at = ?
+    WHERE company_id = ? AND archived_at IS NOT NULL
+  `).run(now, companyId);
+
+  return { success: true };
+}
+
+function getArchivedCompanies(userId) {
+  const teamId = getUserTeamId(userId);
+
+  let rows;
+  if (teamId) {
+    rows = db.prepare(`
+      SELECT c.*, COUNT(ct.id) as contact_count, u.username as created_by_username
+      FROM companies c
+      LEFT JOIN contacts ct ON ct.company_id = c.id
+      LEFT JOIN users u ON u.id = c.created_by
+      WHERE c.team_id = ? AND c.archived_at IS NOT NULL
+      GROUP BY c.id
+      ORDER BY c.archived_at DESC
+    `).all(teamId);
+  } else {
+    rows = db.prepare(`
+      SELECT c.*, COUNT(ct.id) as contact_count, u.username as created_by_username
+      FROM companies c
+      LEFT JOIN contacts ct ON ct.company_id = c.id
+      LEFT JOIN users u ON u.id = c.created_by
+      WHERE c.created_by = ? AND c.team_id IS NULL AND c.archived_at IS NOT NULL
+      GROUP BY c.id
+      ORDER BY c.archived_at DESC
+    `).all(userId);
+  }
+
+  return rows.map(row => ({
+    id: row.id,
+    name: row.name,
+    technologies: row.technologies,
+    organizationNumber: row.organization_number,
+    address: row.address,
+    contactCount: row.contact_count,
+    archivedAt: row.archived_at,
+    createdBy: row.created_by,
+    createdByUsername: row.created_by_username,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  }));
+}
+
+// Legacy function name - now archives instead of deletes
+function deleteCompany(companyId, userId) {
+  return archiveCompany(companyId, userId);
 }
 
 // ============ Contact Functions ============
@@ -561,21 +642,21 @@ function getAllContacts(userId, sort = 'name') {
   if (teamId) {
     rows = db.prepare(`
       SELECT c.*, co.name as company_name, u.username as created_by_username,
-             (SELECT MAX(n.created_at) FROM notes n WHERE n.contact_id = c.id) as last_note_date
+             (SELECT MAX(n.created_at) FROM notes n WHERE n.contact_id = c.id AND n.deleted_at IS NULL) as last_note_date
       FROM contacts c
       JOIN companies co ON co.id = c.company_id
       LEFT JOIN users u ON u.id = c.created_by
-      WHERE c.team_id = ?
+      WHERE c.team_id = ? AND c.archived_at IS NULL AND co.archived_at IS NULL
       ORDER BY ${orderBy}
     `).all(teamId);
   } else {
     rows = db.prepare(`
       SELECT c.*, co.name as company_name, u.username as created_by_username,
-             (SELECT MAX(n.created_at) FROM notes n WHERE n.contact_id = c.id) as last_note_date
+             (SELECT MAX(n.created_at) FROM notes n WHERE n.contact_id = c.id AND n.deleted_at IS NULL) as last_note_date
       FROM contacts c
       JOIN companies co ON co.id = c.company_id
       LEFT JOIN users u ON u.id = c.created_by
-      WHERE c.created_by = ? AND c.team_id IS NULL
+      WHERE c.created_by = ? AND c.team_id IS NULL AND c.archived_at IS NULL AND co.archived_at IS NULL
       ORDER BY ${orderBy}
     `).all(userId);
   }
@@ -598,37 +679,39 @@ function getAllContacts(userId, sort = 'name') {
   }));
 }
 
-function getContactById(contactId, userId) {
+function getContactById(contactId, userId, includeArchived = false) {
   const teamId = getUserTeamId(userId);
+  const archivedFilter = includeArchived ? '' : 'AND c.archived_at IS NULL';
 
   let row;
   if (teamId) {
     row = db.prepare(`
       SELECT c.*, co.name as company_name, u.username as created_by_username,
-             (SELECT MAX(n.created_at) FROM notes n WHERE n.contact_id = c.id) as last_note_date
+             (SELECT MAX(n.created_at) FROM notes n WHERE n.contact_id = c.id AND n.deleted_at IS NULL) as last_note_date
       FROM contacts c
       JOIN companies co ON co.id = c.company_id
       LEFT JOIN users u ON u.id = c.created_by
-      WHERE c.id = ? AND c.team_id = ?
+      WHERE c.id = ? AND c.team_id = ? ${archivedFilter}
     `).get(contactId, teamId);
   } else {
     row = db.prepare(`
       SELECT c.*, co.name as company_name, u.username as created_by_username,
-             (SELECT MAX(n.created_at) FROM notes n WHERE n.contact_id = c.id) as last_note_date
+             (SELECT MAX(n.created_at) FROM notes n WHERE n.contact_id = c.id AND n.deleted_at IS NULL) as last_note_date
       FROM contacts c
       JOIN companies co ON co.id = c.company_id
       LEFT JOIN users u ON u.id = c.created_by
-      WHERE c.id = ? AND c.created_by = ? AND c.team_id IS NULL
+      WHERE c.id = ? AND c.created_by = ? AND c.team_id IS NULL ${archivedFilter}
     `).get(contactId, userId);
   }
 
   if (!row) return null;
 
+  // Get only non-deleted notes
   const notes = db.prepare(`
     SELECT n.*, u.username as created_by_username
     FROM notes n
     LEFT JOIN users u ON u.id = n.created_by
-    WHERE n.contact_id = ?
+    WHERE n.contact_id = ? AND n.deleted_at IS NULL
     ORDER BY n.created_at DESC
   `).all(contactId);
 
@@ -643,6 +726,7 @@ function getContactById(contactId, userId) {
     companyId: row.company_id,
     companyName: row.company_name,
     lastNoteDate: row.last_note_date,
+    archivedAt: row.archived_at,
     createdBy: row.created_by,
     createdByUsername: row.created_by_username,
     createdAt: row.created_at,
@@ -737,21 +821,90 @@ function updateContact(contactId, { name, role, department, description, email, 
   return getContactById(contactId, userId);
 }
 
-function deleteContact(contactId, userId) {
+function archiveContact(contactId, userId) {
   // Verify access
   const contact = getContactById(contactId, userId);
   if (!contact) return { error: 'Contact not found' };
 
   const role = getUserRole(userId);
   if (role === 'member' && contact.createdBy !== userId) {
-    return { error: 'Permission denied. You can only delete contacts you created.' };
+    return { error: 'Permission denied. You can only archive contacts you created.' };
   }
 
   const now = getTimestamp();
+
+  // Archive the contact
+  db.prepare('UPDATE contacts SET archived_at = ?, updated_at = ? WHERE id = ?').run(now, now, contactId);
   db.prepare('UPDATE companies SET updated_at = ? WHERE id = ?').run(now, contact.companyId);
 
-  const result = db.prepare('DELETE FROM contacts WHERE id = ?').run(contactId);
-  return result.changes > 0 ? { success: true } : { error: 'Delete failed' };
+  return { success: true };
+}
+
+function restoreContact(contactId, userId) {
+  // Verify access - use includeArchived=true to find archived contacts
+  const contact = getContactById(contactId, userId, true);
+  if (!contact) return { error: 'Contact not found' };
+  if (!contact.archivedAt) return { error: 'Contact is not archived' };
+
+  const role = getUserRole(userId);
+  if (role === 'member' && contact.createdBy !== userId) {
+    return { error: 'Permission denied. You can only restore contacts you created.' };
+  }
+
+  const now = getTimestamp();
+
+  // Restore the contact
+  db.prepare('UPDATE contacts SET archived_at = NULL, updated_at = ? WHERE id = ?').run(now, contactId);
+  db.prepare('UPDATE companies SET updated_at = ? WHERE id = ?').run(now, contact.companyId);
+
+  return { success: true };
+}
+
+function getArchivedContacts(userId) {
+  const teamId = getUserTeamId(userId);
+
+  let rows;
+  if (teamId) {
+    rows = db.prepare(`
+      SELECT c.*, co.name as company_name, u.username as created_by_username
+      FROM contacts c
+      JOIN companies co ON co.id = c.company_id
+      LEFT JOIN users u ON u.id = c.created_by
+      WHERE c.team_id = ? AND c.archived_at IS NOT NULL
+      ORDER BY c.archived_at DESC
+    `).all(teamId);
+  } else {
+    rows = db.prepare(`
+      SELECT c.*, co.name as company_name, u.username as created_by_username
+      FROM contacts c
+      JOIN companies co ON co.id = c.company_id
+      LEFT JOIN users u ON u.id = c.created_by
+      WHERE c.created_by = ? AND c.team_id IS NULL AND c.archived_at IS NOT NULL
+      ORDER BY c.archived_at DESC
+    `).all(userId);
+  }
+
+  return rows.map(row => ({
+    id: row.id,
+    name: row.name,
+    role: row.role,
+    department: row.department,
+    description: row.description,
+    email: row.email,
+    phone: row.phone,
+    companyId: row.company_id,
+    companyName: row.company_name,
+    archivedAt: row.archived_at,
+    createdBy: row.created_by,
+    createdByUsername: row.created_by_username,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  }));
+}
+
+// Legacy function name - now archives instead of deletes
+function deleteContact(contactId, userId) {
+  return archiveContact(contactId, userId);
 }
 
 // ============ Note Functions ============
@@ -815,7 +968,7 @@ function deleteNote(contactId, noteId, userId) {
   const contact = getContactById(contactId, userId);
   if (!contact) return { error: 'Contact not found' };
 
-  const note = db.prepare('SELECT * FROM notes WHERE id = ? AND contact_id = ?').get(noteId, contactId);
+  const note = db.prepare('SELECT * FROM notes WHERE id = ? AND contact_id = ? AND deleted_at IS NULL').get(noteId, contactId);
   if (!note) return { error: 'Note not found' };
 
   const role = getUserRole(userId);
@@ -825,7 +978,8 @@ function deleteNote(contactId, noteId, userId) {
 
   const now = getTimestamp();
 
-  db.prepare('DELETE FROM notes WHERE id = ?').run(noteId);
+  // Soft delete - set deleted_at instead of actually deleting
+  db.prepare('UPDATE notes SET deleted_at = ?, updated_at = ? WHERE id = ?').run(now, now, noteId);
   db.prepare('UPDATE contacts SET updated_at = ? WHERE id = ?').run(now, contactId);
   db.prepare('UPDATE companies SET updated_at = ? WHERE id = ?').run(now, contact.companyId);
 
@@ -1392,6 +1546,9 @@ module.exports = {
   createCompany,
   updateCompany,
   deleteCompany,
+  archiveCompany,
+  restoreCompany,
+  getArchivedCompanies,
 
   // Contacts
   getAllContacts,
@@ -1399,6 +1556,9 @@ module.exports = {
   createContact,
   updateContact,
   deleteContact,
+  archiveContact,
+  restoreContact,
+  getArchivedContacts,
 
   // Notes
   createNote,

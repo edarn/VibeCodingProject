@@ -83,7 +83,7 @@ router.put('/:id', (req, res) => {
   }
 });
 
-// DELETE /api/companies/:id - Delete company and all contacts
+// DELETE /api/companies/:id - Archive company and all contacts
 router.delete('/:id', (req, res) => {
   try {
     const userId = req.session.userId;
@@ -98,7 +98,27 @@ router.delete('/:id', (req, res) => {
 
     res.status(204).send();
   } catch (err) {
-    console.error('Error deleting company:', err);
+    console.error('Error archiving company:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/companies/:id/restore - Restore archived company
+router.post('/:id/restore', (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const result = data.restoreCompany(req.params.id, userId);
+
+    if (result.error) {
+      if (result.error === 'Company not found') {
+        return res.status(404).json({ error: result.error });
+      }
+      return res.status(400).json({ error: result.error });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error restoring company:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

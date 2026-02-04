@@ -98,7 +98,7 @@ router.put('/:id', (req, res) => {
   }
 });
 
-// DELETE /api/contacts/:id - Delete contact
+// DELETE /api/contacts/:id - Archive contact
 router.delete('/:id', (req, res) => {
   try {
     const userId = req.session.userId;
@@ -113,7 +113,27 @@ router.delete('/:id', (req, res) => {
 
     res.status(204).send();
   } catch (err) {
-    console.error('Error deleting contact:', err);
+    console.error('Error archiving contact:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/contacts/:id/restore - Restore archived contact
+router.post('/:id/restore', (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const result = data.restoreContact(req.params.id, userId);
+
+    if (result.error) {
+      if (result.error === 'Contact not found') {
+        return res.status(404).json({ error: result.error });
+      }
+      return res.status(400).json({ error: result.error });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error restoring contact:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
