@@ -1,4 +1,4 @@
-# Personal CRM System - Specification
+# Simple CRM System - Specification
 
 ## Overview
 
@@ -40,14 +40,14 @@ A lightweight, multi-user CRM system for managing companies, contacts, job candi
    - Contact fields: name, role, department, description, email, phone
    - Add new contacts linked to a company
    - Edit existing contacts
-   - Delete contacts (owner can delete any, member only own creations)
+   - Archive contacts (soft delete - can be restored from Archive view)
    - Search/filter contacts by name, company, or any field
    - Sort contact list by name, company, or last note date
 
 4. **Company Management**
    - Add new companies with name, organization number, address, and technologies
    - Edit existing companies
-   - Delete companies (owner can delete any, member only own creations)
+   - Archive companies (soft delete - archives all contacts too, can be restored)
    - View list of all companies
    - View all contacts for a specific company
 
@@ -83,7 +83,21 @@ A lightweight, multi-user CRM system for managing companies, contacts, job candi
    - Completed ToDos shown greyed out with strikethrough
    - View all ToDos in a central list with filters (All / Active / Completed)
 
-8. **Data Storage**
+8. **Archive & Data Protection**
+   - Companies and contacts are archived instead of permanently deleted
+   - Archive view accessible from user menu to view and restore items
+   - Restoring a company also restores all its associated contacts
+   - Notes use soft delete (deleted_at timestamp) - hidden but recoverable in database
+   - Permissions: owner can archive any, member only own creations
+
+9. **Data Backup**
+   - Export all data as JSON file (owner/solo users only)
+   - Import data from previously exported backup files
+   - Import adds to existing data (doesn't replace)
+   - Exports include: companies, contacts, notes, todos, candidates, comments
+   - Available in Team Settings page
+
+10. **Data Storage**
    - SQLite database for structured data storage
    - File system storage for uploaded resumes
    - Support for persistent volumes on cloud platforms (Railway)
@@ -176,6 +190,7 @@ CREATE TABLE companies (
   technologies TEXT DEFAULT '',
   organization_number TEXT DEFAULT '',
   address TEXT DEFAULT '',
+  archived_at TEXT,
   team_id TEXT,
   created_by TEXT,
   created_at TEXT NOT NULL,
@@ -196,6 +211,7 @@ CREATE TABLE contacts (
   description TEXT DEFAULT '',
   email TEXT DEFAULT '',
   phone TEXT DEFAULT '',
+  archived_at TEXT,
   team_id TEXT,
   created_by TEXT,
   created_at TEXT NOT NULL,
@@ -212,6 +228,7 @@ CREATE TABLE notes (
   id TEXT PRIMARY KEY,
   contact_id TEXT NOT NULL,
   content TEXT NOT NULL,
+  deleted_at TEXT,
   team_id TEXT,
   created_by TEXT,
   created_at TEXT NOT NULL,
@@ -344,9 +361,10 @@ CREATE TABLE candidate_comments (
 
 ### Theme
 
-- Light, modern design
+- Light, modern design with colorful accents
+- Gradient navigation bar (blue to indigo)
+- Color-coded sections: sky blue (contacts), violet (companies), rose/pink (candidates), emerald (todos), amber (archive)
 - Clean white/gray backgrounds
-- Accent color for actions (blue)
 - Good contrast for readability
 - Subtle shadows and rounded corners
 
@@ -412,6 +430,18 @@ Main navigation tabs: **Contacts | Companies | Candidates | ToDos**
    - "Add ToDo" button
    - Click to navigate to linked entity
 
+10. **Archive View**
+    - Accessible from user dropdown menu
+    - Lists archived companies with contact count and archive date
+    - Lists archived contacts with company name and archive date
+    - "Restore" button for each item
+    - Restoring company also restores its contacts
+
+11. **Team Settings / Data Backup**
+    - Export data section (download JSON backup)
+    - Import data section (upload JSON to add data)
+    - Team management (invitations, members, ownership transfer)
+
 ---
 
 ## File Structure
@@ -443,7 +473,9 @@ VibeCodingProject/
 │       ├── todos.js       # ToDo API routes
 │       ├── candidates.js  # Candidate API routes
 │       ├── team.js        # Team management routes
-│       └── invitations.js # Invitation routes
+│       ├── invitations.js # Invitation routes
+│       ├── archive.js     # Archive viewing routes
+│       └── backup.js      # Export/Import routes
 └── scripts/
     ├── migrate-json-to-sqlite.js  # Migration script
     └── seed-test-data.js          # Test data seeder
@@ -486,22 +518,38 @@ VibeCodingProject/
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | /api/companies | List all companies |
+| GET | /api/companies | List all companies (excludes archived) |
 | GET | /api/companies/:id | Get single company with contacts |
 | POST | /api/companies | Create new company |
 | PUT | /api/companies/:id | Update company |
-| DELETE | /api/companies/:id | Delete company and all contacts |
+| DELETE | /api/companies/:id | Archive company and all contacts |
+| POST | /api/companies/:id/restore | Restore archived company |
 
 ### Contacts (Protected)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | /api/contacts | List all contacts |
+| GET | /api/contacts | List all contacts (excludes archived) |
 | GET | /api/contacts?sort=name\|company\|lastNote | Sort contacts |
 | GET | /api/contacts/:id | Get single contact with notes |
 | POST | /api/contacts | Create new contact |
 | PUT | /api/contacts/:id | Update contact |
-| DELETE | /api/contacts/:id | Delete contact |
+| DELETE | /api/contacts/:id | Archive contact |
+| POST | /api/contacts/:id/restore | Restore archived contact |
+
+### Archive (Protected)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/archive/companies | List archived companies |
+| GET | /api/archive/contacts | List archived contacts |
+
+### Backup (Protected - Owner/Solo only)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/backup/export | Export all data as JSON file |
+| POST | /api/backup/import | Import data from JSON backup |
 
 ### Notes (Protected)
 
@@ -509,7 +557,7 @@ VibeCodingProject/
 |--------|----------|-------------|
 | POST | /api/contacts/:contactId/notes | Add note to contact |
 | PUT | /api/contacts/:contactId/notes/:id | Update note |
-| DELETE | /api/contacts/:contactId/notes/:id | Delete note |
+| DELETE | /api/contacts/:contactId/notes/:id | Soft delete note (sets deleted_at) |
 
 ### ToDos (Protected)
 
@@ -587,6 +635,8 @@ Resume uploads are stored in the same volume directory (`/data/uploads`).
 - [ ] Candidate status tracking (pipeline stages)
 - [ ] Email integration
 - [ ] Calendar integration for ToDos
+- [x] ~~JSON data backup and restore~~ (Implemented)
+- [x] ~~Archive/soft delete for companies and contacts~~ (Implemented)
 
 ---
 
