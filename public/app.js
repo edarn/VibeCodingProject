@@ -30,7 +30,7 @@ const auth = {
       console.error('Auth check failed:', err);
     }
     this.currentUser = null;
-    this.showLoginModal();
+    this.showLandingPage();
     return false;
   },
 
@@ -120,13 +120,16 @@ const auth = {
     }
   },
 
-  showLoginModal() {
+  showLandingPage() {
     document.getElementById('nav-links').classList.add('hidden');
     document.getElementById('user-section').classList.add('hidden');
     document.getElementById('main-content').classList.add('hidden');
     document.getElementById('landing-page').classList.remove('hidden');
+    document.getElementById('auth-modal').classList.add('hidden');
     document.getElementById('app').innerHTML = '';
+  },
 
+  showLoginModal() {
     const authModal = document.getElementById('auth-modal');
     authModal.classList.remove('hidden');
 
@@ -285,7 +288,7 @@ const auth = {
       console.error('Logout error:', err);
     }
     this.currentUser = null;
-    this.showLoginModal();
+    this.showLandingPage();
   }
 };
 
