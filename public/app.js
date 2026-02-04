@@ -2260,6 +2260,34 @@ const views = {
         </div>
         ` : ''}
         ` : ''}
+
+        <!-- Data Backup Section -->
+        <div class="border-t border-slate-200 pt-6 mt-6">
+          <h3 class="text-lg font-semibold text-slate-800 mb-4">Data Backup</h3>
+          <p class="text-sm text-slate-600 mb-4">Export your data to a JSON file for backup, or import a previously exported backup.</p>
+
+          <div class="flex flex-col sm:flex-row gap-4">
+            <!-- Export -->
+            <div class="flex-1 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <h4 class="font-medium text-slate-700 mb-2">Export Data</h4>
+              <p class="text-sm text-slate-500 mb-3">Download all your companies, contacts, notes, todos, and candidates as a JSON file.</p>
+              <button onclick="views.exportData()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all font-medium shadow-sm">
+                Download Backup
+              </button>
+            </div>
+
+            <!-- Import -->
+            <div class="flex-1 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <h4 class="font-medium text-slate-700 mb-2">Import Data</h4>
+              <p class="text-sm text-slate-500 mb-3">Restore data from a previously exported backup file. This will add to your existing data.</p>
+              <input type="file" id="import-file" accept=".json" class="hidden" onchange="views.handleImportFile(event)">
+              <button onclick="document.getElementById('import-file').click()" class="w-full bg-gradient-to-r from-violet-500 to-purple-500 text-white px-4 py-2 rounded-lg hover:from-violet-600 hover:to-purple-600 transition-all font-medium shadow-sm">
+                Import Backup
+              </button>
+            </div>
+          </div>
+          <div id="backup-message" class="mt-3 text-sm hidden"></div>
+        </div>
       </div>
     `;
 
@@ -2350,6 +2378,92 @@ const views = {
     } else {
       alert(result.error || 'Failed to transfer ownership');
     }
+  },
+
+  // Data Backup Functions
+  async exportData() {
+    try {
+      const response = await fetch('/api/backup/export', {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Export failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `simple-crm-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      this.showBackupMessage('Data exported successfully!', 'success');
+    } catch (err) {
+      console.error('Export error:', err);
+      this.showBackupMessage('Export failed: ' + err.message, 'error');
+    }
+  },
+
+  async handleImportFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const importData = JSON.parse(text);
+
+      if (!importData.version || !importData.data) {
+        throw new Error('Invalid backup file format');
+      }
+
+      const summary = [];
+      if (importData.data.companies?.length) summary.push(`${importData.data.companies.length} companies`);
+      if (importData.data.contacts?.length) summary.push(`${importData.data.contacts.length} contacts`);
+      if (importData.data.candidates?.length) summary.push(`${importData.data.candidates.length} candidates`);
+
+      if (!confirm(`Import backup from ${importData.exportedAt?.split('T')[0] || 'unknown date'}?\n\nThis will add: ${summary.join(', ') || 'no data'}\n\nNote: This adds to your existing data, it does not replace it.`)) {
+        event.target.value = '';
+        return;
+      }
+
+      const response = await fetch('/api/backup/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ importData })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Import failed');
+      }
+
+      this.showBackupMessage(
+        `Import successful! Added ${result.imported.companies} companies, ${result.imported.contacts} contacts, ${result.imported.candidates} candidates.`,
+        'success'
+      );
+    } catch (err) {
+      console.error('Import error:', err);
+      this.showBackupMessage('Import failed: ' + err.message, 'error');
+    }
+
+    event.target.value = '';
+  },
+
+  showBackupMessage(message, type) {
+    const el = document.getElementById('backup-message');
+    if (!el) return;
+    el.classList.remove('hidden', 'text-green-600', 'text-red-600');
+    el.classList.add(type === 'success' ? 'text-green-600' : 'text-red-600');
+    el.textContent = message;
+    setTimeout(() => el.classList.add('hidden'), 5000);
   },
 
   // Archive View - shows archived companies and contacts

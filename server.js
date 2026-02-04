@@ -107,6 +107,9 @@ app.use('/api/invitations', requireAuth, require('./src/routes/invitations'));
 // Archive routes
 app.use('/api/archive', requireAuth, require('./src/routes/archive'));
 
+// Backup routes (export/import)
+app.use('/api/backup', requireAuth, require('./src/routes/backup'));
+
 // Serve index.html for SPA routes
 app.get('/{*splat}', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
