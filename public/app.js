@@ -981,8 +981,13 @@ const views = {
 
   async deleteContact(id) {
     if (!confirm('Delete this contact and all their notes?')) return;
-    await api.delete(`/api/contacts/${id}`);
-    router.navigate('contacts');
+    try {
+      await api.delete(`/api/contacts/${id}`);
+      router.navigate('contacts');
+    } catch (err) {
+      console.error('Error deleting contact:', err);
+      alert('Failed to delete contact: ' + err.message);
+    }
   },
 
   // Contact Form
@@ -1264,8 +1269,13 @@ const views = {
 
   async deleteCompany(id) {
     if (!confirm('Delete this company and all its contacts?')) return;
-    await api.delete(`/api/companies/${id}`);
-    router.navigate('companies');
+    try {
+      await api.delete(`/api/companies/${id}`);
+      router.navigate('companies');
+    } catch (err) {
+      console.error('Error deleting company:', err);
+      alert('Failed to delete company: ' + err.message);
+    }
   },
 
   // Company activity list (todos only for companies, but could add company-level notes later)
@@ -2014,8 +2024,13 @@ const views = {
 
   async deleteCandidate(id) {
     if (!confirm('Delete this candidate?')) return;
-    await api.delete(`/api/candidates/${id}`);
-    router.navigate('candidates');
+    try {
+      await api.delete(`/api/candidates/${id}`);
+      router.navigate('candidates');
+    } catch (err) {
+      console.error('Error deleting candidate:', err);
+      alert('Failed to delete candidate: ' + err.message);
+    }
   },
 
   // Candidate Form View
