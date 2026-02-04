@@ -129,12 +129,21 @@ const auth = {
     document.getElementById('app').innerHTML = '';
   },
 
+  hideAuthModal() {
+    document.getElementById('auth-modal').classList.add('hidden');
+  },
+
   showLoginModal() {
     const authModal = document.getElementById('auth-modal');
     authModal.classList.remove('hidden');
 
     document.getElementById('auth-modal-content').innerHTML = `
       <div id="login-form">
+        <button onclick="auth.hideAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
         <div class="text-center mb-6">
           <h2 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Welcome Back</h2>
           <p class="text-slate-500 text-sm mt-1">Sign in to your account</p>
@@ -172,6 +181,11 @@ const auth = {
   showRegisterForm() {
     document.getElementById('auth-modal-content').innerHTML = `
       <div id="register-form">
+        <button onclick="auth.hideAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
         <div class="text-center mb-6">
           <h2 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Create Account</h2>
           <p class="text-slate-500 text-sm mt-1">Get started with Simple CRM</p>
