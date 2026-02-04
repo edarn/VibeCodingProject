@@ -1,3 +1,146 @@
+// Internationalization (i18n) module
+const i18n = {
+  currentLang: localStorage.getItem('crm-language') || 'sv',
+
+  translations: {
+    sv: {
+      'hero.subtitle': 'Ett enkelt CRM för privatpersoner och små team som behöver ett smidigt sätt att hantera affärsrelationer utan krångel.',
+      'hero.cta': 'Kom igång',
+      'why.title': 'Varför Simple CRM?',
+      'why.people.title': 'Håll koll på personer',
+      'why.people.desc': 'Vet vem du pratat med, vad ni diskuterade och vad som behöver hända härnäst.',
+      'why.organized.title': 'Håll ordning',
+      'why.organized.desc': 'Gruppera kontakter per företag, lägg till anteckningar och sätt påminnelser.',
+      'why.team.title': 'Arbeta tillsammans',
+      'why.team.desc': 'Bjud in ditt team och dela allt direkt. Alla håller sig synkade.',
+      'why.data.title': 'Förlora aldrig data',
+      'why.data.desc': 'Arkivera istället för att radera, återställ när som helst, och säkerhetskopiera med ett klick.',
+      'features.title': 'Funktioner',
+      'features.contacts.title': 'Kontakter & Företag',
+      'features.contacts.desc': 'Hantera affärsrelationer med detaljerade profiler, anteckningar vid varje interaktion och komplett kontakthistorik.',
+      'features.candidates.title': 'Kandidathantering',
+      'features.candidates.desc': 'Separat hantering av kandidater för rekrytering. Ladda upp CV, lägg till intervjuanteckningar och följ din pipeline.',
+      'features.tasks.title': 'Uppgifter & Att-göra',
+      'features.tasks.desc': 'Glöm aldrig en uppföljning. Skapa uppgifter kopplade till kontakter eller företag, sätt förfallodatum och följ upp.',
+      'features.backup.title': 'Säkerhetskopiering',
+      'features.backup.desc': 'Exportera hela databasen som JSON. Importera säkerhetskopior när som helst. Din data är alltid säker och portabel.',
+      'cta.title': 'Redo att komma igång?',
+      'cta.subtitle': 'Skapa ditt kostnadsfria konto och börja organisera dina kontakter idag.',
+      'cta.button': 'Skapa konto'
+    },
+    en: {
+      'hero.subtitle': 'A simple CRM for individuals and small teams who need an easy way to manage business relationships without hassle.',
+      'hero.cta': 'Get Started',
+      'why.title': 'Why Simple CRM?',
+      'why.people.title': 'Keep track of people',
+      'why.people.desc': 'Know who you talked to, what you discussed, and what needs to happen next.',
+      'why.organized.title': 'Stay organized',
+      'why.organized.desc': 'Group contacts by company, add notes, and set reminders.',
+      'why.team.title': 'Work together',
+      'why.team.desc': 'Invite your team and share everything instantly. Everyone stays in sync.',
+      'why.data.title': 'Never lose data',
+      'why.data.desc': 'Archive instead of delete, restore anytime, and backup with one click.',
+      'features.title': 'Features',
+      'features.contacts.title': 'Contacts & Companies',
+      'features.contacts.desc': 'Manage business relationships with detailed profiles, notes on every interaction, and complete contact history.',
+      'features.candidates.title': 'Candidate Management',
+      'features.candidates.desc': 'Separate candidate management for recruiting. Upload resumes, add interview notes, and track your pipeline.',
+      'features.tasks.title': 'Tasks & To-dos',
+      'features.tasks.desc': 'Never forget a follow-up. Create tasks linked to contacts or companies, set due dates, and track completion.',
+      'features.backup.title': 'Data Backup',
+      'features.backup.desc': 'Export your entire database as JSON. Import backups anytime. Your data is always safe and portable.',
+      'cta.title': 'Ready to get started?',
+      'cta.subtitle': 'Create your free account and start organizing your contacts today.',
+      'cta.button': 'Create Account'
+    },
+    de: {
+      'hero.subtitle': 'Ein einfaches CRM für Einzelpersonen und kleine Teams, die eine unkomplizierte Möglichkeit zur Verwaltung von Geschäftsbeziehungen benötigen.',
+      'hero.cta': 'Loslegen',
+      'why.title': 'Warum Simple CRM?',
+      'why.people.title': 'Behalten Sie den Überblick',
+      'why.people.desc': 'Wissen Sie, mit wem Sie gesprochen haben, was besprochen wurde und was als nächstes passieren muss.',
+      'why.organized.title': 'Bleiben Sie organisiert',
+      'why.organized.desc': 'Gruppieren Sie Kontakte nach Unternehmen, fügen Sie Notizen hinzu und setzen Sie Erinnerungen.',
+      'why.team.title': 'Zusammenarbeiten',
+      'why.team.desc': 'Laden Sie Ihr Team ein und teilen Sie alles sofort. Alle bleiben synchron.',
+      'why.data.title': 'Niemals Daten verlieren',
+      'why.data.desc': 'Archivieren statt löschen, jederzeit wiederherstellen und mit einem Klick sichern.',
+      'features.title': 'Funktionen',
+      'features.contacts.title': 'Kontakte & Unternehmen',
+      'features.contacts.desc': 'Verwalten Sie Geschäftsbeziehungen mit detaillierten Profilen, Notizen zu jeder Interaktion und vollständiger Kontakthistorie.',
+      'features.candidates.title': 'Kandidatenverwaltung',
+      'features.candidates.desc': 'Separate Kandidatenverwaltung für Recruiting. Laden Sie Lebensläufe hoch, fügen Sie Interviewnotizen hinzu und verfolgen Sie Ihre Pipeline.',
+      'features.tasks.title': 'Aufgaben & To-dos',
+      'features.tasks.desc': 'Vergessen Sie nie ein Follow-up. Erstellen Sie Aufgaben, verknüpft mit Kontakten oder Unternehmen, setzen Sie Fälligkeiten und verfolgen Sie den Fortschritt.',
+      'features.backup.title': 'Datensicherung',
+      'features.backup.desc': 'Exportieren Sie Ihre gesamte Datenbank als JSON. Importieren Sie Backups jederzeit. Ihre Daten sind immer sicher und portabel.',
+      'cta.title': 'Bereit loszulegen?',
+      'cta.subtitle': 'Erstellen Sie Ihr kostenloses Konto und beginnen Sie noch heute, Ihre Kontakte zu organisieren.',
+      'cta.button': 'Konto erstellen'
+    },
+    fr: {
+      'hero.subtitle': 'Un CRM simple pour les particuliers et les petites équipes qui ont besoin d\'un moyen facile de gérer leurs relations professionnelles sans complications.',
+      'hero.cta': 'Commencer',
+      'why.title': 'Pourquoi Simple CRM ?',
+      'why.people.title': 'Gardez le fil',
+      'why.people.desc': 'Sachez à qui vous avez parlé, de quoi vous avez discuté et ce qui doit se passer ensuite.',
+      'why.organized.title': 'Restez organisé',
+      'why.organized.desc': 'Groupez les contacts par entreprise, ajoutez des notes et définissez des rappels.',
+      'why.team.title': 'Travaillez ensemble',
+      'why.team.desc': 'Invitez votre équipe et partagez tout instantanément. Tout le monde reste synchronisé.',
+      'why.data.title': 'Ne perdez jamais de données',
+      'why.data.desc': 'Archivez au lieu de supprimer, restaurez à tout moment et sauvegardez en un clic.',
+      'features.title': 'Fonctionnalités',
+      'features.contacts.title': 'Contacts & Entreprises',
+      'features.contacts.desc': 'Gérez vos relations professionnelles avec des profils détaillés, des notes sur chaque interaction et un historique complet des contacts.',
+      'features.candidates.title': 'Gestion des candidats',
+      'features.candidates.desc': 'Gestion séparée des candidats pour le recrutement. Téléchargez des CV, ajoutez des notes d\'entretien et suivez votre pipeline.',
+      'features.tasks.title': 'Tâches & À faire',
+      'features.tasks.desc': 'N\'oubliez jamais un suivi. Créez des tâches liées aux contacts ou entreprises, définissez des échéances et suivez l\'avancement.',
+      'features.backup.title': 'Sauvegarde des données',
+      'features.backup.desc': 'Exportez toute votre base de données en JSON. Importez des sauvegardes à tout moment. Vos données sont toujours sécurisées et portables.',
+      'cta.title': 'Prêt à commencer ?',
+      'cta.subtitle': 'Créez votre compte gratuit et commencez à organiser vos contacts dès aujourd\'hui.',
+      'cta.button': 'Créer un compte'
+    }
+  },
+
+  setLanguage(lang) {
+    this.currentLang = lang;
+    localStorage.setItem('crm-language', lang);
+    this.applyTranslations();
+    this.updateFlagHighlight();
+  },
+
+  applyTranslations() {
+    const elements = document.querySelectorAll('[data-i18n]');
+    elements.forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      const translation = this.translations[this.currentLang]?.[key];
+      if (translation) {
+        el.textContent = translation;
+      }
+    });
+  },
+
+  updateFlagHighlight() {
+    document.querySelectorAll('.lang-flag').forEach(flag => {
+      if (flag.getAttribute('data-lang') === this.currentLang) {
+        flag.classList.add('border-sky-400');
+        flag.classList.remove('border-transparent');
+      } else {
+        flag.classList.remove('border-sky-400');
+        flag.classList.add('border-transparent');
+      }
+    });
+  },
+
+  init() {
+    this.applyTranslations();
+    this.updateFlagHighlight();
+  }
+};
+
 // Toggle user menu dropdown
 function toggleUserMenu() {
   const dropdown = document.getElementById('user-menu-dropdown');
@@ -2720,6 +2863,9 @@ const views = {
 
 // Initialize app - check auth first
 document.addEventListener('DOMContentLoaded', async () => {
+  // Initialize i18n for landing page
+  i18n.init();
+
   const isAuthenticated = await auth.checkAuth();
   if (isAuthenticated) {
     router.navigate('contacts');

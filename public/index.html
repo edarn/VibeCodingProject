@@ -107,24 +107,40 @@
 
   <!-- Landing Page (shown when not logged in) -->
   <div id="landing-page" class="hidden">
+    <!-- Language Selector -->
+    <div class="absolute top-4 right-4 flex gap-2 z-10">
+      <button onclick="i18n.setLanguage('sv')" class="lang-flag w-8 h-6 rounded overflow-hidden border-2 border-transparent hover:border-sky-400 transition-all" data-lang="sv" title="Svenska">
+        <svg viewBox="0 0 16 10" class="w-full h-full"><rect fill="#006AA7" width="16" height="10"/><rect fill="#FECC00" width="16" height="2" y="4"/><rect fill="#FECC00" width="2" height="10" x="5"/></svg>
+      </button>
+      <button onclick="i18n.setLanguage('en')" class="lang-flag w-8 h-6 rounded overflow-hidden border-2 border-transparent hover:border-sky-400 transition-all" data-lang="en" title="English">
+        <svg viewBox="0 0 60 30" class="w-full h-full"><clipPath id="t"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath><path d="M0,0 v30 h60 v-30 z" fill="#00247d"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#t)" stroke="#cf142b" stroke-width="4"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30 M0,15 h60" stroke="#cf142b" stroke-width="6"/></svg>
+      </button>
+      <button onclick="i18n.setLanguage('de')" class="lang-flag w-8 h-6 rounded overflow-hidden border-2 border-transparent hover:border-sky-400 transition-all" data-lang="de" title="Deutsch">
+        <svg viewBox="0 0 5 3" class="w-full h-full"><rect fill="#000" width="5" height="1"/><rect fill="#D00" width="5" height="1" y="1"/><rect fill="#FFCE00" width="5" height="1" y="2"/></svg>
+      </button>
+      <button onclick="i18n.setLanguage('fr')" class="lang-flag w-8 h-6 rounded overflow-hidden border-2 border-transparent hover:border-sky-400 transition-all" data-lang="fr" title="Français">
+        <svg viewBox="0 0 3 2" class="w-full h-full"><rect fill="#002395" width="1" height="2"/><rect fill="#fff" width="1" height="2" x="1"/><rect fill="#ED2939" width="1" height="2" x="2"/></svg>
+      </button>
+    </div>
+
     <!-- Hero Section -->
     <div class="bg-gradient-to-br from-slate-50 to-sky-50 border-b border-slate-200">
       <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
         <h1 class="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
           Simple CRM
         </h1>
-        <p class="text-xl text-slate-600 mb-8 max-w-2xl mx-auto">
-          A lightweight CRM for individuals and small teams who need a simple way to manage business relationships without the complexity.
+        <p class="text-xl text-slate-600 mb-8 max-w-2xl mx-auto" data-i18n="hero.subtitle">
+          Ett enkelt CRM för privatpersoner och små team som behöver ett smidigt sätt att hantera affärsrelationer utan krångel.
         </p>
-        <button onclick="auth.showLoginModal()" class="bg-gradient-to-r from-sky-600 to-blue-600 text-white px-8 py-3 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all font-semibold shadow-lg text-lg">
-          Get Started
+        <button onclick="auth.showLoginModal()" class="bg-gradient-to-r from-sky-600 to-blue-600 text-white px-8 py-3 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all font-semibold shadow-lg text-lg" data-i18n="hero.cta">
+          Kom igång
         </button>
       </div>
     </div>
 
     <!-- Why Section -->
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <h2 class="text-2xl font-bold text-slate-800 text-center mb-12">Why Simple CRM?</h2>
+      <h2 class="text-2xl font-bold text-slate-800 text-center mb-12" data-i18n="why.title">Varför Simple CRM?</h2>
       <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
           <div class="w-12 h-12 bg-sky-100 rounded-lg flex items-center justify-center mb-4">
@@ -132,8 +148,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
             </svg>
           </div>
-          <h3 class="font-semibold text-slate-800 mb-2">Keep Track of People</h3>
-          <p class="text-slate-600 text-sm">Know who you've talked to, what you discussed, and what needs to happen next.</p>
+          <h3 class="font-semibold text-slate-800 mb-2" data-i18n="why.people.title">Håll koll på personer</h3>
+          <p class="text-slate-600 text-sm" data-i18n="why.people.desc">Vet vem du pratat med, vad ni diskuterade och vad som behöver hända härnäst.</p>
         </div>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
           <div class="w-12 h-12 bg-violet-100 rounded-lg flex items-center justify-center mb-4">
@@ -141,8 +157,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
             </svg>
           </div>
-          <h3 class="font-semibold text-slate-800 mb-2">Stay Organized</h3>
-          <p class="text-slate-600 text-sm">Group contacts by company, add notes, and set reminders for follow-ups.</p>
+          <h3 class="font-semibold text-slate-800 mb-2" data-i18n="why.organized.title">Håll ordning</h3>
+          <p class="text-slate-600 text-sm" data-i18n="why.organized.desc">Gruppera kontakter per företag, lägg till anteckningar och sätt påminnelser.</p>
         </div>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
           <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
@@ -150,8 +166,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
             </svg>
           </div>
-          <h3 class="font-semibold text-slate-800 mb-2">Work Together</h3>
-          <p class="text-slate-600 text-sm">Invite your team and share everything instantly. Everyone stays in sync.</p>
+          <h3 class="font-semibold text-slate-800 mb-2" data-i18n="why.team.title">Arbeta tillsammans</h3>
+          <p class="text-slate-600 text-sm" data-i18n="why.team.desc">Bjud in ditt team och dela allt direkt. Alla håller sig synkade.</p>
         </div>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
           <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
@@ -159,8 +175,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
             </svg>
           </div>
-          <h3 class="font-semibold text-slate-800 mb-2">Never Lose Data</h3>
-          <p class="text-slate-600 text-sm">Archive instead of delete, restore anytime, and backup with one click.</p>
+          <h3 class="font-semibold text-slate-800 mb-2" data-i18n="why.data.title">Förlora aldrig data</h3>
+          <p class="text-slate-600 text-sm" data-i18n="why.data.desc">Arkivera istället för att radera, återställ när som helst, och säkerhetskopiera med ett klick.</p>
         </div>
       </div>
     </div>
@@ -168,7 +184,7 @@
     <!-- Features Section -->
     <div class="bg-white border-y border-slate-200">
       <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 class="text-2xl font-bold text-slate-800 text-center mb-12">Features</h2>
+        <h2 class="text-2xl font-bold text-slate-800 text-center mb-12" data-i18n="features.title">Funktioner</h2>
         <div class="grid md:grid-cols-2 gap-8">
           <div class="flex gap-4">
             <div class="flex-shrink-0 w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
@@ -177,8 +193,8 @@
               </svg>
             </div>
             <div>
-              <h3 class="font-semibold text-slate-800 mb-1">Contacts & Companies</h3>
-              <p class="text-slate-600 text-sm">Manage business relationships with detailed profiles, notes on every interaction, and complete contact history.</p>
+              <h3 class="font-semibold text-slate-800 mb-1" data-i18n="features.contacts.title">Kontakter & Företag</h3>
+              <p class="text-slate-600 text-sm" data-i18n="features.contacts.desc">Hantera affärsrelationer med detaljerade profiler, anteckningar vid varje interaktion och komplett kontakthistorik.</p>
             </div>
           </div>
           <div class="flex gap-4">
@@ -188,8 +204,8 @@
               </svg>
             </div>
             <div>
-              <h3 class="font-semibold text-slate-800 mb-1">Candidate Tracking</h3>
-              <p class="text-slate-600 text-sm">Separate candidate management for recruiting. Upload resumes, add interview notes, and track your pipeline.</p>
+              <h3 class="font-semibold text-slate-800 mb-1" data-i18n="features.candidates.title">Kandidathantering</h3>
+              <p class="text-slate-600 text-sm" data-i18n="features.candidates.desc">Separat hantering av kandidater för rekrytering. Ladda upp CV, lägg till intervjuanteckningar och följ din pipeline.</p>
             </div>
           </div>
           <div class="flex gap-4">
@@ -199,8 +215,8 @@
               </svg>
             </div>
             <div>
-              <h3 class="font-semibold text-slate-800 mb-1">Tasks & To-Dos</h3>
-              <p class="text-slate-600 text-sm">Never forget a follow-up. Create tasks linked to contacts or companies, set due dates, and track completion.</p>
+              <h3 class="font-semibold text-slate-800 mb-1" data-i18n="features.tasks.title">Uppgifter & Att-göra</h3>
+              <p class="text-slate-600 text-sm" data-i18n="features.tasks.desc">Glöm aldrig en uppföljning. Skapa uppgifter kopplade till kontakter eller företag, sätt förfallodatum och följ upp.</p>
             </div>
           </div>
           <div class="flex gap-4">
@@ -210,8 +226,8 @@
               </svg>
             </div>
             <div>
-              <h3 class="font-semibold text-slate-800 mb-1">Data Backup</h3>
-              <p class="text-slate-600 text-sm">Export your entire database as JSON. Import backups anytime. Your data is always safe and portable.</p>
+              <h3 class="font-semibold text-slate-800 mb-1" data-i18n="features.backup.title">Säkerhetskopiering</h3>
+              <p class="text-slate-600 text-sm" data-i18n="features.backup.desc">Exportera hela databasen som JSON. Importera säkerhetskopior när som helst. Din data är alltid säker och portabel.</p>
             </div>
           </div>
         </div>
@@ -220,10 +236,10 @@
 
     <!-- CTA Section -->
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-      <h2 class="text-2xl font-bold text-slate-800 mb-4">Ready to get started?</h2>
-      <p class="text-slate-600 mb-8">Create your free account and start organizing your contacts today.</p>
-      <button onclick="auth.showLoginModal()" class="bg-gradient-to-r from-sky-600 to-blue-600 text-white px-8 py-3 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all font-semibold shadow-lg">
-        Create Account
+      <h2 class="text-2xl font-bold text-slate-800 mb-4" data-i18n="cta.title">Redo att komma igång?</h2>
+      <p class="text-slate-600 mb-8" data-i18n="cta.subtitle">Skapa ditt kostnadsfria konto och börja organisera dina kontakter idag.</p>
+      <button onclick="auth.showLoginModal()" class="bg-gradient-to-r from-sky-600 to-blue-600 text-white px-8 py-3 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all font-semibold shadow-lg" data-i18n="cta.button">
+        Skapa konto
       </button>
     </div>
   </div>
