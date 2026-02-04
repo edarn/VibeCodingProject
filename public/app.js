@@ -35,6 +35,8 @@ const auth = {
   },
 
   showLoggedInUI() {
+    document.getElementById('landing-page').classList.add('hidden');
+    document.getElementById('main-content').classList.remove('hidden');
     document.getElementById('nav-links').classList.remove('hidden');
     document.getElementById('user-section').classList.remove('hidden');
     document.getElementById('current-user').textContent = this.currentUser.username;
@@ -121,6 +123,8 @@ const auth = {
   showLoginModal() {
     document.getElementById('nav-links').classList.add('hidden');
     document.getElementById('user-section').classList.add('hidden');
+    document.getElementById('main-content').classList.add('hidden');
+    document.getElementById('landing-page').classList.remove('hidden');
     document.getElementById('app').innerHTML = '';
 
     const authModal = document.getElementById('auth-modal');
