@@ -56,6 +56,28 @@ const auth = {
 
     // Update team menu items
     this.updateTeamMenu();
+
+    // Load team logo
+    this.loadTeamLogo();
+  },
+
+  async loadTeamLogo() {
+    try {
+      const res = await fetch('/api/team/logo');
+      if (res.ok) {
+        const data = await res.json();
+        const logoContainer = document.getElementById('team-logo-container');
+        const logoImg = document.getElementById('team-logo');
+        if (data.logoUrl) {
+          logoImg.src = data.logoUrl;
+          logoContainer.classList.remove('hidden');
+        } else {
+          logoContainer.classList.add('hidden');
+        }
+      }
+    } catch (err) {
+      console.error('Error loading team logo:', err);
+    }
   },
 
   updateTeamMenu() {
@@ -2211,6 +2233,35 @@ const views = {
         </div>
         ` : ''}
 
+        ${!isSolo ? `
+        <!-- Team Logo -->
+        <div class="mb-8">
+          <h3 class="text-lg font-semibold text-slate-800 mb-4">Team Logo</h3>
+          <p class="text-sm text-slate-500 mb-3">Upload a logo that will be displayed in the navigation bar for all team members.</p>
+          <div class="flex items-center gap-4">
+            <div id="current-logo-preview" class="w-24 h-16 bg-slate-100 rounded-lg flex items-center justify-center overflow-hidden border border-slate-200">
+              ${teamData.team?.logoFilename
+                ? `<img src="/uploads/${teamData.team.logoFilename}" alt="Current logo" class="max-w-full max-h-full object-contain">`
+                : `<span class="text-slate-400 text-sm">No logo</span>`
+              }
+            </div>
+            <div class="flex flex-col gap-2">
+              <input type="file" id="logo-file" accept="image/*" class="hidden" onchange="views.handleLogoUpload(event)">
+              <button onclick="document.getElementById('logo-file').click()" class="bg-gradient-to-r from-violet-500 to-purple-500 text-white px-4 py-2 rounded-lg hover:from-violet-600 hover:to-purple-600 transition-all font-medium shadow-sm text-sm">
+                ${teamData.team?.logoFilename ? 'Change Logo' : 'Upload Logo'}
+              </button>
+              ${teamData.team?.logoFilename ? `
+              <button onclick="views.removeLogo()" class="text-red-500 hover:text-red-700 text-sm font-medium">
+                Remove Logo
+              </button>
+              ` : ''}
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 mt-2">Supported formats: PNG, JPG, GIF, WebP, SVG. Max size: 2MB.</p>
+          <div id="logo-message" class="mt-2 text-sm hidden"></div>
+        </div>
+        ` : ''}
+
         <!-- Invite Member -->
         <div class="mb-8">
           <h3 class="text-lg font-semibold text-slate-800 mb-4">Invite Team Member</h3>
@@ -2355,6 +2406,81 @@ const views = {
     if (!confirm('Cancel this invitation?')) return;
     await teamManager.cancelInvitation(invitationId);
     await this.teamSettings(document.getElementById('app'));
+  },
+
+  async handleLogoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const messageEl = document.getElementById('logo-message');
+
+    // Check file size (2MB limit)
+    if (file.size > 2 * 1024 * 1024) {
+      messageEl.textContent = 'File too large. Maximum size is 2MB.';
+      messageEl.className = 'mt-2 text-sm text-red-600';
+      messageEl.classList.remove('hidden');
+      event.target.value = '';
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    try {
+      const res = await fetch('/api/team/logo', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || 'Upload failed');
+      }
+
+      messageEl.textContent = 'Logo uploaded successfully!';
+      messageEl.className = 'mt-2 text-sm text-green-600';
+      messageEl.classList.remove('hidden');
+
+      // Refresh the logo in navbar
+      auth.loadTeamLogo();
+
+      // Refresh the settings view
+      await this.teamSettings(document.getElementById('app'));
+    } catch (err) {
+      console.error('Logo upload error:', err);
+      messageEl.textContent = 'Upload failed: ' + err.message;
+      messageEl.className = 'mt-2 text-sm text-red-600';
+      messageEl.classList.remove('hidden');
+    }
+
+    event.target.value = '';
+  },
+
+  async removeLogo() {
+    if (!confirm('Remove the team logo?')) return;
+
+    try {
+      const res = await fetch('/api/team/logo', {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!res.ok) {
+        const result = await res.json();
+        throw new Error(result.error || 'Failed to remove logo');
+      }
+
+      // Refresh the logo in navbar
+      auth.loadTeamLogo();
+
+      // Refresh the settings view
+      await this.teamSettings(document.getElementById('app'));
+    } catch (err) {
+      console.error('Logo remove error:', err);
+      alert('Failed to remove logo: ' + err.message);
+    }
   },
 
   async removeMember(memberId) {

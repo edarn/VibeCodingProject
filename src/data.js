@@ -77,8 +77,28 @@ function getTeamByUserId(userId) {
     ownerId: team.owner_id,
     ownerUsername: team.owner_username,
     ownerEmail: team.owner_email,
+    logoFilename: team.logo_filename,
     createdAt: team.created_at
   };
+}
+
+// Update team logo (owner only)
+function updateTeamLogo(teamId, logoFilename, userId) {
+  const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(teamId);
+  if (!team) return { error: 'Team not found' };
+  if (team.owner_id !== userId) return { error: 'Only team owner can update logo' };
+
+  db.prepare('UPDATE teams SET logo_filename = ? WHERE id = ?').run(logoFilename, teamId);
+  return { success: true, logoFilename };
+}
+
+// Get team logo filename for a user (works for any team member)
+function getTeamLogo(userId) {
+  const user = db.prepare('SELECT team_id FROM users WHERE id = ?').get(userId);
+  if (!user || !user.team_id) return null;
+
+  const team = db.prepare('SELECT logo_filename FROM teams WHERE id = ?').get(user.team_id);
+  return team?.logo_filename || null;
 }
 
 // Create a new team (user becomes owner)
@@ -1607,6 +1627,8 @@ module.exports = {
   mergeUserDataIntoTeam,
   deleteUserSoloData,
   userHasSoloData,
+  updateTeamLogo,
+  getTeamLogo,
 
   // Invitations
   createInvitation,

@@ -267,6 +267,9 @@ function migrateExistingData() {
   // Add deleted_at column for notes (soft delete feature)
   addColumnIfNotExists('notes', 'deleted_at', 'TEXT');
 
+  // Add logo_filename column for teams (team logo feature)
+  addColumnIfNotExists('teams', 'logo_filename', 'TEXT');
+
   // Find the first user to assign orphaned data to
   const firstUser = db.prepare('SELECT id FROM users ORDER BY created_at ASC LIMIT 1').get();
 

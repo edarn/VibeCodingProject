@@ -1,6 +1,10 @@
 const express = require('express');
-const router = express.Router();
+const path = require('path');
+const fs = require('fs');
 const data = require('../data');
+
+module.exports = (logoUpload, uploadsDir) => {
+const router = express.Router();
 
 // GET /api/team - Get current user's team info (or null if solo)
 router.get('/', (req, res) => {
@@ -192,4 +196,101 @@ router.delete('/members/:id', (req, res) => {
   }
 });
 
-module.exports = router;
+// POST /api/team/logo - Upload team logo (owner only)
+router.post('/logo', logoUpload.single('logo'), (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const role = data.getUserRole(userId);
+
+    if (role !== 'owner') {
+      // Delete uploaded file if not authorized
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
+      return res.status(403).json({ error: 'Only team owner can upload logo' });
+    }
+
+    const team = data.getTeamByUserId(userId);
+    if (!team) {
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No logo file uploaded' });
+    }
+
+    // Delete old logo if exists
+    if (team.logoFilename) {
+      const oldLogoPath = path.join(uploadsDir, team.logoFilename);
+      if (fs.existsSync(oldLogoPath)) {
+        fs.unlinkSync(oldLogoPath);
+      }
+    }
+
+    const result = data.updateTeamLogo(team.id, req.file.filename, userId);
+
+    if (result.error) {
+      return res.status(400).json({ error: result.error });
+    }
+
+    res.json({ success: true, logoFilename: req.file.filename });
+  } catch (err) {
+    console.error('Error uploading logo:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/team/logo - Remove team logo (owner only)
+router.delete('/logo', (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const role = data.getUserRole(userId);
+
+    if (role !== 'owner') {
+      return res.status(403).json({ error: 'Only team owner can remove logo' });
+    }
+
+    const team = data.getTeamByUserId(userId);
+    if (!team) {
+      return res.status(404).json({ error: 'Team not found' });
+    }
+
+    // Delete logo file if exists
+    if (team.logoFilename) {
+      const logoPath = path.join(uploadsDir, team.logoFilename);
+      if (fs.existsSync(logoPath)) {
+        fs.unlinkSync(logoPath);
+      }
+    }
+
+    data.updateTeamLogo(team.id, null, userId);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error removing logo:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/team/logo - Get current user's team logo
+router.get('/logo', (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const logoFilename = data.getTeamLogo(userId);
+
+    if (!logoFilename) {
+      return res.json({ logoUrl: null });
+    }
+
+    res.json({ logoUrl: `/uploads/${logoFilename}` });
+  } catch (err) {
+    console.error('Error getting logo:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+return router;
+};

@@ -50,6 +50,34 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
+// Configure multer for logo uploads (images)
+const logoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, 'logo-' + uniqueSuffix + ext);
+  }
+});
+
+const logoFilter = (req, file, cb) => {
+  const allowedTypes = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'];
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (allowedTypes.includes(ext)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files (PNG, JPG, GIF, WebP, SVG) are allowed'), false);
+  }
+};
+
+const logoUpload = multer({
+  storage: logoStorage,
+  fileFilter: logoFilter,
+  limits: { fileSize: 2 * 1024 * 1024 } // 2MB limit for logos
+});
+
 // Ensure data directory exists for sessions
 const sessionDir = process.env.DATABASE_PATH ? path.dirname(process.env.DATABASE_PATH) : path.join(__dirname, 'data');
 if (!fs.existsSync(sessionDir)) {
@@ -100,9 +128,12 @@ app.use('/api/todos', requireAuth, require('./src/routes/todos'));
 // Candidates routes with file upload middleware
 app.use('/api/candidates', requireAuth, require('./src/routes/candidates')(upload, uploadsDir));
 
-// Team management routes
-app.use('/api/team', requireAuth, require('./src/routes/team'));
+// Team management routes (with logo upload support)
+app.use('/api/team', requireAuth, require('./src/routes/team')(logoUpload, uploadsDir));
 app.use('/api/invitations', requireAuth, require('./src/routes/invitations'));
+
+// Serve uploaded files (logos, resumes)
+app.use('/uploads', express.static(uploadsDir));
 
 // Archive routes
 app.use('/api/archive', requireAuth, require('./src/routes/archive'));
