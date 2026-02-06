@@ -536,7 +536,12 @@ const router = {
           await views.contactList(app);
           break;
         case 'contact-detail':
-          await views.contactDetail(app, params.id);
+          // On desktop, show split-view; on mobile, show full-page detail
+          if (window.innerWidth >= 768) {
+            await views.contactList(app, params.id);
+          } else {
+            await views.contactDetail(app, params.id);
+          }
           break;
         case 'contact-form':
           await views.contactForm(app, params.id, params.companyId);
@@ -782,57 +787,253 @@ function formatDateTime(isoString) {
 
 // Views
 const views = {
-  // Contact List View (Main)
-  async contactList(container) {
+  // Track selected contact for split-view
+  selectedContactId: null,
+
+  // Contact List View (Main) - supports both full-width and split-view modes
+  async contactList(container, selectedId = null) {
     const contacts = await api.get('/api/contacts');
-
-    container.innerHTML = `
-      <div class="mb-6 flex justify-between items-center">
-        <div>
-          <h2 class="text-2xl font-bold text-slate-800">Contacts</h2>
-          <p class="text-slate-500">${contacts.length} contacts</p>
-        </div>
-        <button onclick="router.navigate('contact-form')"
-                class="bg-gradient-to-r from-sky-600 to-blue-600 text-white px-5 py-2.5 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all font-medium shadow-sm">
-          + Add Contact
-        </button>
-      </div>
-
-      <div class="mb-4">
-        <input type="text" id="search-input" placeholder="Search contacts..."
-               class="w-full md:w-96 px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors"
-               oninput="views.filterContacts()">
-      </div>
-
-      <div class="bg-white shadow-sm rounded-xl overflow-hidden border border-slate-200">
-        <table class="min-w-full divide-y divide-slate-200">
-          <thead class="bg-gradient-to-r from-slate-50 to-slate-100">
-            <tr>
-              <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
-                  onclick="views.sortContacts('name')">
-                Name <span id="sort-name" class="text-sky-600"></span>
-              </th>
-              <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
-                  onclick="views.sortContacts('company')">
-                Company <span id="sort-company"></span>
-              </th>
-              <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
-                  onclick="views.sortContacts('lastNote')">
-                Last Note <span id="sort-lastNote"></span>
-              </th>
-            </tr>
-          </thead>
-          <tbody id="contacts-table" class="bg-white divide-y divide-slate-100">
-            ${this.renderContactRows(contacts)}
-          </tbody>
-        </table>
-      </div>
-    `;
-
     this._contacts = contacts;
     this._currentSort = 'name';
     this._sortAsc = true;
-    document.getElementById('sort-name').textContent = '↑';
+    this.selectedContactId = selectedId;
+
+    // Check if we're in split-view mode (has selection and desktop width)
+    const isSplitView = selectedId && window.innerWidth >= 768;
+
+    if (isSplitView) {
+      container.innerHTML = `
+        <div class="flex gap-6">
+          <!-- Left: Compact contact list -->
+          <div id="contact-list-panel" class="w-80 flex-shrink-0">
+            <div class="mb-4 flex justify-between items-center">
+              <div>
+                <h2 class="text-xl font-bold text-slate-800">Contacts</h2>
+                <p class="text-slate-500 text-sm">${contacts.length} contacts</p>
+              </div>
+              <button onclick="router.navigate('contact-form')"
+                      class="bg-gradient-to-r from-sky-600 to-blue-600 text-white px-3 py-1.5 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all font-medium shadow-sm text-sm">
+                + Add
+              </button>
+            </div>
+
+            <div class="mb-3">
+              <input type="text" id="search-input" placeholder="Search..."
+                     class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors text-sm"
+                     oninput="views.filterContactsCompact()">
+            </div>
+
+            <div id="contacts-compact-list" class="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden max-h-[calc(100vh-280px)] overflow-y-auto">
+              ${this.renderCompactContactList(contacts, selectedId)}
+            </div>
+          </div>
+
+          <!-- Right: Contact detail panel -->
+          <div id="contact-detail-panel" class="flex-1 min-w-0">
+            <!-- Detail content loaded here -->
+          </div>
+        </div>
+      `;
+
+      // Load the selected contact's details
+      await this.loadContactDetailPanel(selectedId);
+    } else {
+      // Full-width mode (no selection or mobile)
+      container.innerHTML = `
+        <div class="mb-6 flex justify-between items-center">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800">Contacts</h2>
+            <p class="text-slate-500">${contacts.length} contacts</p>
+          </div>
+          <button onclick="router.navigate('contact-form')"
+                  class="bg-gradient-to-r from-sky-600 to-blue-600 text-white px-5 py-2.5 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all font-medium shadow-sm">
+            + Add Contact
+          </button>
+        </div>
+
+        <div class="mb-4">
+          <input type="text" id="search-input" placeholder="Search contacts..."
+                 class="w-full md:w-96 px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors"
+                 oninput="views.filterContacts()">
+        </div>
+
+        <div class="bg-white shadow-sm rounded-xl overflow-hidden border border-slate-200">
+          <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-gradient-to-r from-slate-50 to-slate-100">
+              <tr>
+                <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                    onclick="views.sortContacts('name')">
+                  Name <span id="sort-name" class="text-sky-600"></span>
+                </th>
+                <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                    onclick="views.sortContacts('company')">
+                  Company <span id="sort-company"></span>
+                </th>
+                <th class="px-6 py-3.5 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                    onclick="views.sortContacts('lastNote')">
+                  Last Note <span id="sort-lastNote"></span>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="contacts-table" class="bg-white divide-y divide-slate-100">
+              ${this.renderContactRows(contacts)}
+            </tbody>
+          </table>
+        </div>
+      `;
+      document.getElementById('sort-name').textContent = '↑';
+    }
+  },
+
+  // Render compact contact list for split-view
+  renderCompactContactList(contacts, selectedId = null) {
+    if (contacts.length === 0) {
+      return `<div class="px-4 py-8 text-center text-slate-500">No contacts found</div>`;
+    }
+    return contacts.map(c => `
+      <div class="px-4 py-3 cursor-pointer transition-colors border-l-4 ${c.id === selectedId
+        ? 'bg-sky-50 border-sky-500'
+        : 'border-transparent hover:bg-slate-50'}"
+           onclick="views.selectContact('${c.id}')">
+        <div class="font-medium text-slate-800 truncate">${this.escapeHtml(c.name)}</div>
+        <div class="text-sm text-slate-500 truncate">${this.escapeHtml(c.companyName || '')}</div>
+      </div>
+    `).join('');
+  },
+
+  // Select a contact - handles both mobile and desktop
+  async selectContact(id) {
+    // On mobile, navigate to full-page detail view
+    if (window.innerWidth < 768) {
+      router.navigate('contact-detail', { id });
+      return;
+    }
+
+    // On desktop, update split-view
+    this.selectedContactId = id;
+
+    // Update URL for bookmarking
+    history.replaceState({}, '', `#contact/${id}`);
+
+    // Update selection highlight in list
+    this.updateContactSelection(id);
+
+    // Load contact details in the right panel
+    await this.loadContactDetailPanel(id);
+  },
+
+  // Update visual selection in compact list
+  updateContactSelection(selectedId) {
+    const listContainer = document.getElementById('contacts-compact-list');
+    if (!listContainer) return;
+
+    listContainer.innerHTML = this.renderCompactContactList(this._contacts, selectedId);
+  },
+
+  // Load contact detail into the right panel
+  async loadContactDetailPanel(id) {
+    const panel = document.getElementById('contact-detail-panel');
+    if (!panel) return;
+
+    const [contact, allTodos] = await Promise.all([
+      api.get(`/api/contacts/${id}`),
+      api.get('/api/todos')
+    ]);
+    const todos = allTodos.filter(t => t.linkedType === 'contact' && t.linkedId === id);
+
+    panel.innerHTML = `
+      <div class="bg-white shadow-sm rounded-xl p-6 mb-6 border border-slate-200">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800">${this.escapeHtml(contact.name)}</h2>
+            <a href="#" onclick="router.navigate('company-detail', {id: '${contact.companyId}'}); return false;"
+               class="text-sky-600 hover:text-sky-700 font-medium">${this.escapeHtml(contact.companyName)}</a>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="views.closeContactDetail()"
+                    class="text-slate-400 hover:text-slate-600 p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                    title="Close">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+            <button onclick="router.navigate('contact-form', {id: '${contact.id}'})"
+                    class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors font-medium">
+              Edit
+            </button>
+            <button onclick="views.archiveContact('${contact.id}')"
+                    class="bg-amber-50 text-amber-600 px-4 py-2 rounded-lg hover:bg-amber-100 transition-colors font-medium">
+              Archive
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          ${contact.role ? `<div><span class="text-slate-500">Role:</span> <span class="text-slate-700">${this.escapeHtml(contact.role)}</span></div>` : ''}
+          ${contact.department ? `<div><span class="text-slate-500">Department:</span> <span class="text-slate-700">${this.escapeHtml(contact.department)}</span></div>` : ''}
+          ${contact.email ? `<div><span class="text-slate-500">Email:</span> <a href="mailto:${this.escapeHtml(contact.email)}" class="text-sky-600 hover:text-sky-700">${this.escapeHtml(contact.email)}</a></div>` : ''}
+          ${contact.phone ? `<div><span class="text-slate-500">Phone:</span> <span class="text-slate-700">${this.escapeHtml(contact.phone)}</span></div>` : ''}
+        </div>
+
+        ${contact.description ? `
+          <div class="mt-4 pt-4 border-t border-slate-200">
+            <h3 class="text-sm font-medium text-slate-500 mb-2">Description</h3>
+            <p class="text-slate-700">${this.escapeHtml(contact.description)}</p>
+          </div>
+        ` : ''}
+      </div>
+
+      <div class="bg-white shadow-sm rounded-xl p-6 border border-slate-200">
+        <h3 class="text-lg font-semibold text-slate-800 mb-4">Notes & ToDos</h3>
+
+        <form onsubmit="views.addNote(event, '${contact.id}')" class="mb-6">
+          <textarea id="new-note" rows="3" placeholder="Add a note..."
+                    class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors"></textarea>
+          <div class="mt-2 flex items-center gap-4">
+            <label class="flex items-center gap-2 text-sm text-slate-600">
+              <input type="checkbox" id="make-todo" class="h-4 w-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500">
+              Make this a ToDo
+            </label>
+            <button type="submit" class="bg-gradient-to-r from-sky-600 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all font-medium shadow-sm">
+              Add
+            </button>
+          </div>
+        </form>
+
+        <div class="mb-3 flex gap-2 text-sm">
+          <span class="text-slate-500">Sort by:</span>
+          <button onclick="views.sortActivity('date')" class="activity-sort text-sky-600 font-medium" data-sort="date">Date <span id="sort-activity-date">↓</span></button>
+          <button onclick="views.sortActivity('type')" class="activity-sort text-slate-600 hover:text-slate-800" data-sort="type">Type <span id="sort-activity-type"></span></button>
+        </div>
+
+        <div id="activity-list" class="space-y-4">
+          ${this.renderActivityList(contact.notes, todos, contact.id, 'contact')}
+        </div>
+      </div>
+    `;
+
+    this._currentContact = contact;
+    this._currentTodos = todos;
+    this._activitySort = 'date';
+    this._activitySortAsc = false;
+  },
+
+  // Close contact detail and return to full-width list
+  closeContactDetail() {
+    this.selectedContactId = null;
+    history.replaceState({}, '', '#contacts');
+    router.navigate('contacts');
+  },
+
+  // Filter for compact list in split-view
+  filterContactsCompact() {
+    const query = document.getElementById('search-input').value.toLowerCase();
+    const filtered = this._contacts.filter(c =>
+      c.name.toLowerCase().includes(query) ||
+      (c.companyName || '').toLowerCase().includes(query) ||
+      (c.role || '').toLowerCase().includes(query)
+    );
+    document.getElementById('contacts-compact-list').innerHTML = this.renderCompactContactList(filtered, this.selectedContactId);
   },
 
   renderContactRows(contacts) {
@@ -840,7 +1041,7 @@ const views = {
       return `<tr><td colspan="3" class="px-6 py-8 text-center text-slate-500">No contacts found</td></tr>`;
     }
     return contacts.map(c => `
-      <tr class="hover:bg-sky-50/50 cursor-pointer transition-colors" onclick="router.navigate('contact-detail', {id: '${c.id}'})">
+      <tr class="hover:bg-sky-50/50 cursor-pointer transition-colors" onclick="views.selectContact('${c.id}')">
         <td class="px-6 py-4 whitespace-nowrap">
           <div class="font-medium text-slate-800">${this.escapeHtml(c.name)}</div>
           ${c.role ? `<div class="text-sm text-slate-500">${this.escapeHtml(c.role)}</div>` : ''}
