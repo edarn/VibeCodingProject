@@ -909,7 +909,16 @@ const views = {
       return;
     }
 
-    // On desktop, update split-view
+    // Check if we're already in split-view mode
+    const detailPanel = document.getElementById('contact-detail-panel');
+
+    if (!detailPanel) {
+      // Not in split-view yet, navigate to trigger full split-view render
+      router.navigate('contact-detail', { id });
+      return;
+    }
+
+    // Already in split-view, just update the selection
     this.selectedContactId = id;
 
     // Update URL for bookmarking
